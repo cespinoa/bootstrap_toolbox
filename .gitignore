@@ -1,0 +1,11 @@
+# Ignore compressed files of any type
+*.zip
+*.tar
+*.gz
+*.bz2
+*.xz
+*.7z
+*.rar
+
+# Ignore backup files with .copia extension
+*.copia

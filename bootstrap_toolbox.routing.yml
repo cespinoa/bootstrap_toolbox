@@ -1,0 +1,7 @@
+bootstrap_toolbox.settings:
+  path: '/admin/config/media/bootstrap-toolbox'
+  defaults:
+    _form: '\Drupal\bootstrap_toolbox\Form\BootstrapToolboxSettingsForm'
+    _title: 'Bootstrap Toolbox Settings'
+  requirements:
+    _permission: 'administer site configuration'

@@ -1,0 +1,12 @@
+name: 'Bootstrap Toolbox - Carousel'
+type: module
+description: 'Provide formatters and view'
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:media
+  - drupal:file
+  - drupal:image
+config:
+  install:
+    - bootstrap_toolbox_carousel.settings

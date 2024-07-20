@@ -1,0 +1,6 @@
+bootstrap_toolbox.settings:
+  title: 'Bootstrap Toolbox Settings'
+  description: 'Settings for the Bootstrap Toolbox.'
+  parent: system.admin_config_media
+  route_name: bootstrap_toolbox.settings
+  weight: 100
