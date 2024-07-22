@@ -1,0 +1,8 @@
+bootstrap_toolbox_block_to_card.settings:
+  type: config_object
+  label: 'Bootstrap Toolbox Block to Card Settings'
+  mapping:
+    theme_as_card:
+      type: boolean
+      label: 'Theme as a card'
+      default_value: false

@@ -1,0 +1,106 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Bootstrap Toolbox Block to Card module.
+ */
+
+
+use Drupal\Core\Form\FormStateInterface;
+
+
+/**
+ * Implements hook_theme().
+ */
+function bootstrap_toolbox_block_to_card_theme($existing, $type, $theme, $path) {
+  $module_path = \Drupal::service('extension.list.module')->getPath('bootstrap_toolbox_block_to_card');
+
+  return [
+    'bootstrap_toolbox_block_to_card' => [
+      'render element' => 'elements',
+      'template' => 'bootstrap-toolbox-block-to-card', 
+      'path' => $module_path . '/templates',
+    ],
+  ];
+}
+
+
+/**
+ * Implements hook_form_alter().
+ */
+function bootstrap_toolbox_block_to_card_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  if($form_id=='block_form'){
+    $block = $form_state->getFormObject()->getEntity();
+    $form['settings']['theme_as_card'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Theme as a card'),
+      '#default_value' => $block->getThirdPartySetting('bootstrap_toolbox_block_to_card', 'theme_as_card', FALSE),
+    ];
+    $form['actions']['submit']['#submit'][] = 'bootstrap_toolbox_block_to_card_block_submit';
+  }
+}
+
+
+/**
+ * Implements hook_block_submit_alter().
+ */
+function bootstrap_toolbox_block_to_card_block_submit($form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $block = $form_state->getFormObject()->getEntity();
+  $theme_as_card = $form_state->getValue(['settings', 'theme_as_card']);
+  $block->setThirdPartySetting('bootstrap_toolbox_block_to_card', 'theme_as_card', $theme_as_card);
+  \Drupal::logger('bootstrap_toolbox_block_to_card')->notice('Theme as a card setting: @value', ['@value' => $theme_as_card]);
+  $block->save();
+}
+
+
+/**
+ * Implements hook_block_view_alter().
+ */
+function bootstrap_toolbox_block_to_card_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
+  $entity_block = $build['#block'];
+  $theme_as_card = $entity_block->getThirdPartySetting('bootstrap_toolbox_block_to_card', 'theme_as_card', FALSE);
+  if( $theme_as_card){
+    $build['#configuration']['theme_as_card'] = TRUE;
+    $build['#theme'] = 'bootstrap_toolbox_block_to_card'; 
+  }
+}
+
+
+/**
+ * Implements hook_preprocess_HOOK() for block templates.
+ */
+function bootstrap_toolbox_block_to_card_preprocess_bootstrap_toolbox_block_to_card(&$variables) {
+  if (isset($variables['elements']['#configuration']['theme_as_card']) && $variables['elements']['#configuration']['theme_as_card'] ) {
+    foreach($variables['elements']['#configuration'] as $key=>$value){
+      $variables[$key] = $value;
+    }
+    $variables['content']  = $variables['elements']['content'];
+  }
+}
+
+
+/**
+ * Implements hook_library_info_build().
+ */
+function bootstrap_toolbox_block_to_card_library_info_build() {
+  $libraries['block_styles'] = [
+    'css' => [
+      'theme' => [
+        'css/bootstrap-toolbox-block-to-card.css' => [],
+      ],
+    ],
+  ];
+  return $libraries;
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function bootstrap_toolbox_block_to_card_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'bootstrap_toolbox_block_to_card/block_styles';
+}
+
+
+
+
+
