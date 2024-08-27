@@ -37,25 +37,30 @@
  * @ingroup themeable
  */
 #}
+{% if elements['#from_layout_builder'] %}
+   {% set content = elements.content %}
+   {% set label = elements.label[0] %}
+   {% set card_classes = elements['#card_classes'] %}
+   {% set header_classes = elements['#header_classes'] %}
+   {% set body_classes = elements['#body_classes'] %}
+{% endif %}
 {%
   set classes = [
     'block-removed-class',
     'block-' ~ configuration.provider|clean_class,
     'card',
-    'shadow-sm'
+    card_classes
   ]
 %}
-
 <div{{ attributes.addClass(classes) }}>
-  <div class="card-header">
+  {% if label %}
+    <div class="card-header {{ header_classes }}">
       {{ title_prefix }}
-      {% if label %}
         <h2 class="card-title">{{ label }}</h2>
-      {% endif %}
       {{ title_suffix }}
-  
-  </div>  
-  <div class="card-body">
+    </div>
+  {% endif %}
+  <div class="card-body {{ body_classes }} ">
     {% block content %}
       <div{{ content_attributes.addClass('content, card-text') }}>
         {{ content }}
@@ -64,3 +69,5 @@
 
   </div>
 </div>
+
+

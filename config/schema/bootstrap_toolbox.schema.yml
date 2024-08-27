@@ -1,0 +1,130 @@
+# Schema for the configuration files of the Bootstrap Toolbox module.
+bootstrap_toolbox.settings:
+  type: config_object
+  label: 'Bootstrap Toolbox settings'
+  mapping:
+    example:
+      type: string
+      label: 'Example'
+
+bootstrap_toolbox.blockstyle.*:
+  type: config_entity
+  label: 'Bootstrap Toolbox block style config'
+  mapping:
+    extra_classes:
+      type: string
+      label: 'Extra classes'
+    extra_wrapper:
+      type: string
+      label: 'Extra wrapper'
+
+
+bootstrap_toolbox.bootstrap_toolbox_wrapper.*:
+  type: config_entity
+  label: Bootstrap Toolbox Wrapper
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Title
+    uuid:
+      type: string
+    description:
+      type: string
+      label: 'Wrapper class'
+
+
+bootstrap_toolbox.bootstrap_toolbox_style.*:
+  type: config_entity
+  label: Bootstrap Toolbox Style
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Style
+    uuid:
+      type: string
+    description:
+      type: string
+      label: Description
+    classes:
+      type: string
+      label: Classes
+    scope:
+      type: array
+      label: Scope
+
+
+bootstrap_toolbox.bootstrap_toolbox_scope.*:
+  type: config_entity
+  label: Bootstrap Toolbox Scope
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    description:
+      type: string
+      label: Description
+    system:
+      type: boolean
+      label: System
+
+
+views.display_extender.bootstrap_toolbox_display_extender:
+  type: mapping
+  label: 'Views Alter Page'
+  mapping:
+    bootstrap_toolbox_settings:
+      type: mapping
+      label: 'Bootstrap Toolbox Settings'
+      mapping:
+        edge_to_edge:
+          type: boolean
+          label: 'Page will be displayed edge to edge_to_edge'
+        hide_title:
+          type: boolean
+          label: 'Hide page title'
+        hide_sidebars:
+          type: boolean
+          label: 'Sidebars will be hidden'
+        hide_breadcrumb:
+          type: boolean
+          label: 'Hide breadcrumb'
+
+
+
+
+ckeditor.plugin.bootstrap_toolbox:
+  type: mapping
+  label: 'CKEditor Bootstrap Grid configuration'
+  mapping:
+    use_cdn:
+      type: boolean
+      label: 'Whether to use CDN or not'
+    cdn_url:
+      type: string
+      label: 'CDN URL'
+
+
+# Plugin \Drupal\ckeditor_bs_grid\Plugin\CKEditor5Plugin\BsGrid
+ckeditor5.plugin.bootstrap_toolbox_container:
+  type: mapping
+  label: Bootstrap Grid
+  mapping:
+    use_cdn:
+      type: boolean
+      label: 'Whether to use CDN or not'
+      constraints:
+        NotNull: [ ]
+    cdn_url:
+      type: string
+      label: 'CDN URL'

@@ -1,0 +1,26 @@
+bootstrap_toolbox.main.setting.tabs:
+  route_name: bootstrap_toolbox.settings
+  title: 'Main settings'
+  base_route: bootstrap_toolbox.settings
+
+bootstrap_toolbox.node_fields.settingss:
+  route_name: bootstrap_toolbox.node_fields.settings
+  title: 'Extrafields node settings'
+  base_route: bootstrap_toolbox.settings
+
+entity.bootstrap_toolbox_wrapper.collection:
+  route_name: entity.bootstrap_toolbox_wrapper.collection
+  title: 'Wrappers'
+  base_route: bootstrap_toolbox.settings
+
+entity.bootstrap_toolbox_style.collection:
+  route_name: entity.bootstrap_toolbox_style.collection
+  title: 'Styles'
+  base_route: bootstrap_toolbox.settings
+
+entity.bootstrap_toolbox_scope.collection:
+  route_name: entity.bootstrap_toolbox_scope.collection
+  title: 'Scopes'
+  base_route: bootstrap_toolbox.settings
+
+

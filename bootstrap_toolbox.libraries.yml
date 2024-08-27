@@ -1,0 +1,41 @@
+apply_container_class:
+  version: 1.x
+  css:
+    theme:
+      css/edge-to-edge-hakcs.css: {}
+  js:
+    js/apply-container-class.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+edge_to_edge_hakcs:
+  version: 1.x
+  css:
+    theme:
+      css/edge-to-edge-hakcs.css: {}
+
+apply_edition_mode:
+  version: 1.x
+  js:
+    js/apply-edition-mode.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+remove_empty_paragraphs:
+  version: 1.x
+  css:
+    theme:
+      css/remove-empty-paragraphs.css: {}
+  js:
+    js/remove-empty-paragraphs.js: {}
+
+inline_form:
+  version: 1.x
+  css:
+    theme:
+      css/in-line-form.css: {}
+

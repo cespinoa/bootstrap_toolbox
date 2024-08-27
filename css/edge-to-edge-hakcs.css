@@ -1,0 +1,36 @@
+.display-flex {
+/*
+  display: flex;
+*/
+}
+
+.display-flex img {
+/*
+  width: 100%!important;
+  height: auto;
+*/
+}
+
+/*
+div[data-once="bootstrap-toolbox"] {
+  margin: 0px;
+  padding: 0px;
+}
+*/
+
+div.container-fluid {
+  margin: 0px;
+  padding: 0px;
+}
+
+/*
+div.container-fluid {
+  margin: 0px;
+  padding: 0px;
+}
+
+div.bootstrap-toolbox-container-fluid {
+  margin: 0px;
+  padding: 0px;
+}
+*/

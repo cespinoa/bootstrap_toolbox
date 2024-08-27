@@ -1,0 +1,7 @@
+bootstrap_toolbox_list_group.example:
+  path: '/bootstrap-toolbox-list-group/example'
+  defaults:
+    _title: 'Example'
+    _controller: '\Drupal\bootstrap_toolbox_list_group\Controller\BootstrapToolboxListGroupController'
+  requirements:
+    _permission: 'access content'

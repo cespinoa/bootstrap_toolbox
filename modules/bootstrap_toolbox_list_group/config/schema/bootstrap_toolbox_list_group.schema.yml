@@ -1,0 +1,22 @@
+views.style.bootstrap_toolbox_list_group_list_group_with_panels:
+  type: views_style
+  label: 'List Group with Panels'
+  mapping:
+    wrapper_class:
+      type: string
+      label: 'Wrapper class'
+
+
+views.display_extender.bootstrap_toolbox_list_group_display_extender:
+  type: mapping
+  label: 'Views Attach Library Settings'
+  mapping:
+    attach_library:
+      type: mapping
+      label: 'The libraries to be attached'
+      mapping:
+        attach_library:
+          type: string
+          label: 'The libraries to be attached'
+
+

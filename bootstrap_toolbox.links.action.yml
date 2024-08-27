@@ -1,0 +1,23 @@
+entity.bootstrap_toolbox_wrapper.add_form:
+  route_name: 'entity.bootstrap_toolbox_wrapper.add_form'
+  title: 'Add wrapper'
+  appears_on:
+    - entity.bootstrap_toolbox_wrapper.collection
+
+entity.bootstrap_toolbox_style.add_form:
+  route_name: 'entity.bootstrap_toolbox_style.add_form'
+  title: 'Add style'
+  appears_on:
+    - entity.bootstrap_toolbox_style.collection
+
+entity.bootstrap_toolbox_scope.add_form:
+  route_name: 'entity.bootstrap_toolbox_scope.add_form'
+  title: 'Add scope'
+  appears_on:
+    - entity.bootstrap_toolbox_scope.collection
+
+style_wizar.form:
+  route_name: 'style_wizar.form'
+  title: 'Wizar'
+  appears_on:
+    - entity.bootstrap_toolbox_style.collection

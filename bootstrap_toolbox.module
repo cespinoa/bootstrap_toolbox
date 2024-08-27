@@ -1,0 +1,314 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Bootstrap Toolbox module.
+ */
+
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\NodeTypeInterface;
+use Drupal\node\Entity\NodeType;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\node\NodeInterface;
+
+use Drupal\Core\Template\Attribute;
+
+use Drupal\Core\Field\FormatterInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+
+use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxScope;
+use Drupal\Core\Access\AccessResult;
+
+
+
+include_once __DIR__ .'/includes/bootstrap_toolbox.node_types.inc' ;
+include_once __DIR__ .'/includes/bootstrap_toolbox.nodes.inc' ;
+include_once __DIR__ .'/includes/bootstrap_toolbox.blocks.inc' ;
+include_once __DIR__ .'/includes/bootstrap_toolbox.pages.inc' ;
+include_once __DIR__ .'/includes/bootstrap_toolbox.fields.inc' ;
+include_once __DIR__ .'/includes/bootstrap_toolbox.help.inc' ;
+
+
+
+/**
+ * Implements hook_theme().
+ */
+function bootstrap_toolbox_theme($existing, $type, $theme, $path) {
+  return [
+  'field__bootstrap_toolbox' => [
+    'render_element' => 'element',
+    'template' => 'field--bootstrap-toolbox',
+    'path' => $path.'/templates',
+    'preprocess functions' => [
+      'template_preprocess',
+      'template_preprocess_field',
+      'template_preprocess_field__bootstrap_toolbox',
+      'bootstrap_toolbox_list_group_preprocess_field',
+      'contextual_preprocess',
+      'ds_preprocess_field',
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for field templates.
+ */
+function bootstrap_toolbox_theme_suggestions_field_alter(array &$suggestions, array $variables) {
+  if (isset($variables['element']['#third_party_settings']['bootstrap_toolbox'])) {
+    array_unshift($suggestions, 'field__bootstrap_toolbox');
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function bootstrap_toolbox_theme_registry_alter(&$theme_registry){
+  /*
+   * Actual:
+   * field__text_with_summary" => array:7 [▼
+    "template" => "field--text-with-summary"
+    "path" => "core/themes/claro/templates/classy/field"
+    "render element" => "element"
+    "base hook" => "field"
+    "type" => "base_theme_engine"
+    "theme path" => "core/themes/claro"
+    "preprocess functions" => array:6 [▼
+      0 => "template_preprocess"
+      1 => "template_preprocess_field"
+      2 => "bootstrap_toolbox_preprocess_field"
+      3 => "bootstrap_toolbox_list_group_preprocess_field"
+      4 => "contextual_preprocess"
+      5 => "ds_preprocess_field"
+    ]
+  ]
+   * 
+   * */
+
+  $themes = [];
+  foreach($theme_registry as $theme=>$config){
+    if(substr($theme,0,5) == 'field'){
+      $themes[$theme] = $config;
+    }
+  }
+
+  $theme_registry['field__text_with_summary']['template'] = 'field--bootstrap-toolbox';
+  $theme_registry['field__text_with_summary']['path'] = 'modules/custom/bootstrap_toolbox/templates';
+  $theme_registry['field__text_with_summary']['type'] = 'module';
+  $theme_registry['field__text_with_summary']['theme_path'] = 'modules/custom/bootstrap_toolbox';
+  $theme_registry['field__text_with_summary']['preprocess functions'] = [
+    'template_preprocess',
+    'template_preprocess_field',
+    'template_preprocess_field__bootstrap_toolbox',
+    'bootstrap_toolbox_list_group_preprocess_field',
+    'contextual_preprocess',
+    'ds_preprocess_field',
+  ];
+  
+  
+}
+
+/**
+ * Preprocess function for field__bootstrap_toolbox.
+ */
+function template_preprocess_field__bootstrap_toolbox(array &$variables){
+
+  $settings = isset($variables['element']['#third_party_settings']) 
+    ? ($variables['element']['#third_party_settings']['bootstrap_toolbox']['settings'] ?? []) 
+    : [];
+  if(!empty($settings)){
+
+    $utilityservice = \Drupal::service('bootstrap_toolbox.utility_service');
+
+    $wrapperId = $settings['wrapper'] ?? 'none';
+    $wrapperStyleId = $settings['wrapper_style'] ?? 'none';
+    $styleId = $settings['style'] ?? 'none';
+
+    $wrapper = $utilityservice->getWrapperById($wrapperId);  
+    $wrapperStyle = $utilityservice->getStyleById($wrapperStyleId);  
+    $style = $utilityservice->getStyleById($styleId);
+    
+    $variables['attributes'] = new \Drupal\Core\Template\Attribute();
+
+    if($wrapper!='none'){
+      $variables['attributes']->addClass($wrapper);
+
+      $variables['wrapper_classes'] = $wrapperStyle;
+    }
+    if($style != 'none'){
+      $variables['attributes']->addClass($style);
+    }
+
+  }
+}
+
+
+
+
+
+
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function bootstrap_toolbox_menu_local_tasks_alter(&$data, $route_name) {
+  // Obtén la coincidencia de la ruta actual.
+  $route_match = \Drupal::routeMatch();
+
+  // Verifica si estamos en un nodo.
+  if ($route_match->getRouteName() == 'entity.node.canonical') {
+    $node = $route_match->getParameter('node');
+
+    if ($node instanceof \Drupal\node\NodeInterface && $node->bundle() == 'carousel') {
+      // Obtén los otros nodos del bundle "carousel".
+      $related_nodes = bootstrap_toolbox_get_carousel_nodes($node);
+      $page_title = $node->getTitle();
+      $data['tabs'][0]['entity.node.canonical']['#link']['title'] = $node->getTitle();
+      foreach ($related_nodes as $related_node) {
+        // Añade una pestaña por cada nodo.
+        $data['tabs'][0]['output'][] = [
+          '#theme' => 'menu_local_task',
+          '#link' => [
+            'title' => $related_node->label(),
+            'url' => $related_node->toUrl(),
+            'localized_options' => [],
+          ],
+          '#active' => FALSE,
+          '#weight' => 100,
+        ];
+      }
+    }
+  }
+}
+
+/**
+ * Función personalizada para obtener nodos del bundle "carousel".
+ */
+function bootstrap_toolbox_get_carousel_nodes($current_node) {
+  // Utiliza una consulta de entidad para obtener todos los nodos del bundle "carousel".
+  $query = \Drupal::entityQuery('node')
+    ->condition('type', 'carousel')
+    ->condition('status', 1)
+    ->sort('created', 'ASC')
+    ->accessCheck(TRUE);
+  
+  $nids = $query->execute();
+  $nodes = \Drupal\node\Entity\Node::loadMultiple($nids);
+
+  // Elimina el nodo actual de la lista.
+  unset($nodes[$current_node->id()]);
+
+  return $nodes;
+}
+
+
+
+
+
+
+
+/**
+ * Implements hook_ENTITY_TYPE_access() for BootstrapToolboxScope entities.
+ */
+function bootstrap_toolbox_bootstrap_toolbox_scope_access(BootstrapToolboxScope $bootstrap_toolbox_scope, $operation, \Drupal\Core\Session\AccountInterface $account) {
+  if ($operation == 'delete' && $bootstrap_toolbox_scope->get('system')) {
+    // Negar el acceso si es un scope del sistema.
+    return AccessResult::forbidden()->addCacheableDependency($bootstrap_toolbox_scope);
+  }
+
+  // Permitir otras operaciones o si no es un scope del sistema.
+  return AccessResult::neutral();
+}
+
+
+
+
+
+
+/**
+ * Implements hook_preprocess_HOOK() for nodes.
+ */
+function bootstrap_toolbox_preprocess_node(array &$variables) {
+  $node = $variables['node'];
+  
+  // Itera sobre todos los campos del nodo.
+  foreach ($node->getFieldDefinitions() as $field_name => $field_definition) {
+    // Verifica si el campo es de tipo texto largo.
+    if ($field_definition->getType() === 'text_long' || $field_definition->getType() === 'text_with_summary') {
+      
+      // Verifica si el campo está presente en el contenido renderizado.
+      if (isset($variables['content'][$field_name][0]['#text'])) {
+        $content = $variables['content'][$field_name][0]['#text'];
+        
+        // Llama a la función para reemplazar los marcadores de posición.
+        $content = bootstrap_toolbox_replace_placeholders($content);
+        
+        // Asigna el contenido procesado de vuelta a la variable.
+        $variables['content'][$field_name][0]['#text'] = $content;
+      }
+    }
+  }
+}
+
+
+/**
+ * Replaces parallax and container placeholders with actual sections.
+ *
+ * @param string $text
+ *   The text to process.
+ *
+ * @return string
+ *   The processed text.
+ */
+function bootstrap_toolbox_replace_placeholders($text) {
+  
+  // Reemplaza los marcadores de contenedor.
+  $pattern_container = '/\[container\s+([^\]]*)\](.*?)\[\/container\]/s';
+
+  $text = preg_replace_callback($pattern_container, function ($matches) {
+    return bootstrap_toolbox_container_generate_replacement($matches[1], $matches[2]);
+  }, $text);
+
+  // Reemplaza los marcadores de contenedor fluido.
+  $pattern_container_fluid = '/\[container-fluid\s+([^\]]*)\](.*?)\[\/container-fluid\]/s';
+
+  $text = preg_replace_callback($pattern_container_fluid, function ($matches) {
+    return bootstrap_toolbox_container_fluid_generate_replacement($matches[1], $matches[2]);
+  }, $text);
+
+  return $text;
+}
+
+
+/**
+ * Generates the replacement HTML for the container placeholder.
+ *
+ * @param string $classes
+ *   The class names from the container placeholder.
+ * @param string $content
+ *   The content inside the container placeholder.
+ *
+ * @return string
+ *   The replacement HTML.
+ */
+function bootstrap_toolbox_container_generate_replacement($classes, $content) {
+  $class_list = trim($classes); // Elimina espacios en blanco innecesarios.
+  return '<div class="container ' . $class_list . '">' . $content . '</div>';
+}
+
+/**
+ * Generates the replacement HTML for the container-fluid placeholder.
+ *
+ * @param string $classes
+ *   The class names from the container placeholder.
+ * @param string $content
+ *   The content inside the container placeholder.
+ *
+ * @return string
+ *   The replacement HTML.
+ */
+function bootstrap_toolbox_container_fluid_generate_replacement($classes, $content) {
+  $class_list = trim($classes); // Elimina espacios en blanco innecesarios.
+  return '<div class="container-fluid ' . $class_list . '">' . $content . '</div>';
+}

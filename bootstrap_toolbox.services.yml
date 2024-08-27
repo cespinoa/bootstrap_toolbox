@@ -1,0 +1,18 @@
+services:
+  bootstrap_toolbox.utility_service:
+    class: Drupal\bootstrap_toolbox\Service\UtilityService
+    arguments:
+      - '@entity_type.manager'
+      - '@config.factory'
+      - '@renderer'
+      - '@entity_display.repository'
+      - '@entity_field.manager'
+      - '@file_url_generator'
+
+  bootstrap_toolbox.render_block_component_subscriber:
+    class: Drupal\bootstrap_toolbox\EventSubscriber\BlockComponentRenderArraySubscriber
+    arguments: ['@entity_type.manager', '@config.factory']
+    tags:
+    - { name: event_subscriber }
+
+

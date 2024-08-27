@@ -1,0 +1,16 @@
+.form-inline-item div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;  
+}
+
+.form-inline-item label {
+  width: 20%; 
+  margin-right: 10px; 
+  text-align: right; 
+}
+
+
+.form-item .form-control {
+  flex: 1; /* El control ocupará el espacio restante */
+}

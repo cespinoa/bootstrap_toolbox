@@ -1,0 +1,10 @@
+administer bootstrap_toolbox_wrapper:
+  title: 'Administer Bootstrap Toolbox wrappers'
+
+administer bootstrap_toolbox_style:
+  title: 'Administer bootstrap toolbox style'
+
+administer bootstrap_toobox_scope:
+  title: 'Administer bootstrap toobox scope'
+
+

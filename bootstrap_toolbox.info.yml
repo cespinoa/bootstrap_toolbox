@@ -1,5 +1,9 @@
 name: 'Bootstrap Toolbox'
 type: module
 description: 'Main module'
-package: Custom
+package: 'Bootstrap Toolbox'
 core_version_requirement: ^10 || ^11
+configure: bootstrap_toolbox.settings
+dependencies:
+  - drupal:views
+

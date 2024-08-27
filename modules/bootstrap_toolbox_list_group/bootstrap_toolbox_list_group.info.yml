@@ -1,0 +1,5 @@
+name: 'Bootstrap Toolbox List_Group'
+type: module
+description: 'Provide Bootstrap Lists'
+package: 'Bootstrap Toolbox'
+core_version_requirement: ^10 || ^11

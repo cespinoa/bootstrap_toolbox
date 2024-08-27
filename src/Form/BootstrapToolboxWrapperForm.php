@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\bootstrap_toolbox\Form;
+
+use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxWrapper;
+
+/**
+ * BootstrapToolboxWrapper form.
+ */
+final class BootstrapToolboxWrapperForm extends EntityForm {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function form(array $form, FormStateInterface $formstate): array {
+
+    $form = parent::form($form, $formstate);
+
+    $form['label'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Title'),
+      '#maxlength' => 255,
+      '#default_value' => $this->entity->label(),
+      '#required' => TRUE,
+    ];
+
+    $form['id'] = [
+      '#type' => 'machine_name',
+      '#default_value' => $this->entity->id(),
+      '#machine_name' => [
+        'exists' => [BootstrapToolboxWrapper::class, 'load'],
+      ],
+      '#disabled' => !$this->entity->isNew(),
+    ];
+
+    $form['description'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Wrapper class'),
+      '#default_value' => $this->entity->get('description'),
+      '#required' => TRUE,
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function save(array $form, FormStateInterface $formstate): int {
+    $result = parent::save($form, $formstate);
+    $messageArgs = ['%label' => $this->entity->label()];
+    $this->messenger()->addStatus(
+      match($result) {
+        \SAVED_NEW => $this->t('Created new wrapper %label.', $messageArgs),
+        \SAVED_UPDATED => $this->t('Updated wrapper %label.', $messageArgs),
+      }
+    );
+    $formstate->setRedirectUrl($this->entity->toUrl('collection'));
+    return $result;
+  }
+
+}

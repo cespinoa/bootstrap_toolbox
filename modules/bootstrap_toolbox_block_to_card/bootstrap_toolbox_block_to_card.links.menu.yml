@@ -1,0 +1,6 @@
+bootstrap_toolbox_block_to_card.settings:
+  title: 'Block to Card'
+  description: 'Settings for converting blocks to card layout.'
+  parent: bootstrap_toolbox.settings
+  route_name: bootstrap_toolbox_block_to_card.settings
+  weight: 50

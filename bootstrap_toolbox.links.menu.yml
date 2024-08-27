@@ -1,6 +1,34 @@
 bootstrap_toolbox.settings:
-  title: 'Bootstrap Toolbox Settings'
-  description: 'Settings for the Bootstrap Toolbox.'
-  parent: system.admin_config_media
+  title: Bootstrap Toolbox
+  description: 'Bootstrap Toolbox settings'
+  parent: system.admin_config
   route_name: bootstrap_toolbox.settings
   weight: 100
+
+bootstrap_toolbox.node_fields.settings:
+  title: 'Node fields'
+  description: 'Node extra fields settings.'
+  parent: bootstrap_toolbox.settings
+  route_name: bootstrap_toolbox.node_fields.settings
+  weight: 10
+
+entity.bootstrap_toolbox_wrapper.overview:
+  title: Wrappers
+  parent: bootstrap_toolbox.settings
+  description: 'List of wrappers to extend site functionality.'
+  route_name: entity.bootstrap_toolbox_wrapper.collection
+  weight: 20
+
+entity.bootstrap_toolbox_style.overview:
+  title: Styles
+  parent: bootstrap_toolbox.settings
+  description: 'List of bootstrap toolbox styles to extend site functionality.'
+  route_name: entity.bootstrap_toolbox_style.collection
+
+entity.bootstrap_toolbox_scope.overview:
+  title: Scopes
+  parent: bootstrap_toolbox.settings
+  description: 'List of bootstrap toolbox scopes to extend site functionality.'
+  route_name: entity.bootstrap_toolbox_scope.collection
+
+

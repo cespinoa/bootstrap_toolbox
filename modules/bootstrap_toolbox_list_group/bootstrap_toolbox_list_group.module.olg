@@ -1,0 +1,343 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for Bootstrap Toolbox List_Group module.
+ */
+
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Field\FormatterInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Drupal\Core\Template\Attribute;
+
+
+use Drupal\views\Plugin\views\style\StylePluginBase; // Mover luego con las views
+
+use Drupal\views\ViewExecutable;
+
+
+
+
+
+
+
+
+/**
+ * Implements hook_field_formatter_third_party_settings_form().
+ */
+function bootstrap_toolbox_list_group_field_formatter_third_party_settings_form(FormatterInterface $plugin, FieldDefinitionInterface $field_definition, $view_mode, $form, FormStateInterface $form_state) {
+  $element = [];
+
+
+  dpm($plugin->getPluginId());
+
+  /* @var \Drupal\bootstrap_toolbox_list_group\InitialSettingsService $initialSettings */
+  $initialSettings = \Drupal::service('bootstrap_toolbox_list_group.initial');
+  
+  if (in_array($plugin->getPluginId(), $initialSettings->getFormatters())) {
+    $element['list_group'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Display as a nice bootstrap list group'),
+      '#default_value' => $plugin->getThirdPartySetting('bootstrap_toolbox_list_group', 'list_group')
+    ];
+    
+    $element['display_as_a_card'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Display as a bootstrap card'),
+      '#default_value' => $plugin->getThirdPartySetting('bootstrap_toolbox_list_group', 'display_as_a_card'),
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][third_party_settings][bootstrap_toolbox_list_group][list_group]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+    
+    $element['use_label_as_card_header'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Display label as card_header'),
+      '#default_value' => $plugin->getThirdPartySetting('bootstrap_toolbox_list_group', 'use_label_as_card_header'),
+      '#states' => [
+        'visible' => [
+          ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][third_party_settings][bootstrap_toolbox_list_group][display_as_a_card]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+    
+  }
+    
+  return $element;
+}
+
+
+/**
+ * Implements hook_field_formatter_settings_summary_alter().
+ */
+function bootstrap_toolbox_list_group_field_formatter_settings_summary_alter(&$summary, $context) {
+  //~ /* @var \Drupal\bootstrap_toolbox_list_group\InitialSettingsService $initialSettings */
+  $initialSettings = \Drupal::service('bootstrap_toolbox_list_group.initial');
+  if(in_array($context['formatter']->getPluginId(), $initialSettings->getFormatters())) {
+    if($context['formatter']->getThirdPartySetting('bootstrap_toolbox_list_group', 'list_group')) {
+      $summary[] = t('Display as a nice bootstrap list group');
+      if($context['formatter']->getThirdPartySetting('bootstrap_toolbox_list_group', 'display_as_a_card')){
+        $summary[] = t('Display as a bootstrap card');
+        if($context['formatter']->getThirdPartySetting('bootstrap_toolbox_list_group', 'use_label_as_card_header')){
+          $summary[] = t('Use label as card header');
+        }
+        
+      }
+    } 
+  }
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for field templates.
+ */
+function bootstrap_toolbox_list_group_preprocess_field(&$variables){
+  if(array_key_exists('#third_party_settings', $variables['element']) 
+        && array_key_exists('bootstrap_toolbox_list_group',$variables['element']['#third_party_settings']) 
+        && $variables['element']['#third_party_settings']['bootstrap_toolbox_list_group']['list_group']){
+    if(count($variables['items'])){
+      $variables['attributes'] =  new \Drupal\Core\Template\Attribute();
+      $variables['attributes']->addClass('list-group bg-primary');
+      if($variables['element']['#third_party_settings']['bootstrap_toolbox_list_group']['display_as_a_card']){
+        $variables['attributes']->addClass('card');
+        $variables['label_class'] = 'card-header';
+        if($variables['element']['#third_party_settings']['bootstrap_toolbox_list_group']['use_label_as_card_header']){
+          $variables['label_display'] = 'above';
+          $variables['label_hidden'] = FALSE;
+        }
+      }
+      if($variables['items'][0]['content']['#type']=='link'){
+        foreach($variables['items'] as $delta=>$item){
+          $variables['items'][$delta]['attributes']->addClass('list-group-item list-group-item-action');
+        }
+      }
+    }
+    \Drupal::messenger()->addMessage(print_r('Hola', TRUE));
+    
+  }
+  kint('List group');
+    kint($variables);
+  
+}
+
+
+
+/*
+ * 
+ * =====================================================================
+ * =======================   views style plugin   ======================
+ * =====================================================================
+ * 
+ * /*
+
+
+/**
+ * Prepares variables for views-style-bootstrap-toolbox-list-group-list-group-with-panels.html.twig template.
+ */
+function template_preprocess_views_style_bootstrap_toolbox_list_group_list_group_with_panels(array &$variables): void {
+  $view = $variables['view'];
+  $options = $view->style_plugin->options;
+
+  $variables['default_row_class'] = $options['default_row_class'];
+  foreach ($variables['rows'] as $id => $row) {
+    $variables['rows'][$id] = [
+      'content' => $row,
+      'attributes' => new Attribute(),
+    ];
+    if ($row_class = $view->style_plugin->getRowClass($id)) {
+      $variables['rows'][$id]['attributes']->addClass($row_class);
+    }
+  }
+}
+
+
+/**
+ * Implements hook_preprocess_HOOK() for views style templates.
+ */
+function bootstrap_toolbox_list_group_preprocess_views_style_bootstrap_toolbox_list_group_list_group_with_panels(&$variables) {
+  $view = $variables['view'];
+  $style_plugin = $view->style_plugin;
+
+  // Comprueba que el estilo del plugin es bootstrap_toolbox_list_group_list_group_with_panels.
+  if ($style_plugin->getPluginId() == 'bootstrap_toolbox_list_group_list_group_with_panels') {
+    
+    // Recupera los settings del estilo.
+    $style_options = $style_plugin->options;
+
+    // Recupera los valores de los campos desde los settings.
+    $item_list_field = $style_options['item_list'] ?? '';
+    $selected_panel_field = $style_options['selected_panel'] ?? '';
+
+    // Inicializa el array para almacenar las filas.
+    $bootstrap_list_group_with_panels_rows = [];
+
+    // Recorre todas las filas de la vista.
+    foreach ($view->result as $row_index => $row) {
+      // Obtiene el valor sin formatear (crudo) del campo item_list.
+      $item_list_value = $row->_entity->get($item_list_field)->value;
+      
+      //~ Poner un if aquí se trataría de poder formatear también el título del enlace para poder poner imágenes
+      //~ $item_list_value = $view->style_plugin->getField($row_index, $item_list_value);
+      
+      
+      // Obtiene el valor formateado del campo selected_panel.
+      $selected_panel_value = $view->style_plugin->getField($row_index, $selected_panel_field);
+
+      // Guarda los valores en el array.
+      $bootstrap_list_group_with_panels_rows[] = [
+        'item_list' => $item_list_value,
+        'selected_panel' => $selected_panel_value,
+      ];
+    }
+
+    // Guarda el array en las variables para usarlo en la plantilla.
+    $variables['bootstrap_list_group_with_panels_rows'] = $bootstrap_list_group_with_panels_rows;
+  }
+}
+
+
+
+/*
+ * 
+ * =====================================================================
+ * =======================   Display extender   ======================
+ * =====================================================================
+ * 
+ * */
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function bootstrap_toolbox_list_group_views_pre_render(ViewExecutable $view) {
+  
+  $current_display = $view->current_display;
+  $view_config = $view->storage->getDisplay($current_display);
+  $display_as_list_group = NULL;
+  if(isset($view_config['display_options']['display_extenders'])) {
+    if (isset($view_config['display_options']['display_extenders']['bootstrap_toolbox_list_group_display_extender'])) {
+      if (array_key_exists('display_as_list_group', $view_config['display_options']['display_extenders']['bootstrap_toolbox_list_group_display_extender'])) {
+        $display_as_list_group = $view_config['display_options']['display_extenders']['bootstrap_toolbox_list_group_display_extender']['display_as_list_group'];
+        //~ $view->element['#theme'][] = 'views_view__bootstrap_toolbox_list_group';
+        //~ kint($view);
+        //~ foreach ($view->result as $index => $row) {
+          // Añade una clase personalizada a cada row.
+          //~ if (!isset($view->style_plugin->row_classes[$index])) {
+            //~ $view->style_plugin->row_classes[$index] = [];
+            //~ kint('hola');
+          //~ }
+          //~ kint($view->element);
+          // Añade una clase personalizada a cada fila.
+          $view->style_plugin->row_classes[$index][] = 'my-custom-class';
+          //~ kint($view->style_plugin->row_classes[$index]);
+        //~ }
+      }
+    }
+  }
+  //~ kint($display_as_list_group);
+  
+  
+}
+
+
+/**
+ * Implements hook_preprocess_views_view_fields().
+ */
+function bootstrap_toolbox_list_group_preprocess_views_view_fields(&$variables) {
+  $variables['custom_variable'] = 'Custom value';
+}
+
+
+
+/**
+ * Implements hook_preprocess_views_view().
+ */
+function bootstrap_toolbox_list_group_preprocess_views_view(&$variables) {
+  $view = $variables['view'];
+  
+  // Verifica el ID y el display de la vista.
+  if ($view->id() == 'taxonomy_term') {
+    //~ kint($view);
+  }
+}
+
+
+
+
+
+function bootstrap_toolbox_list_group_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
+  if($view->display_handler->options['display_extenders']['bootstrap_toolbox_list_group_display_extender']['display_as_list_group']){
+    //~ kint('_toolbox_list_group_views_pre_view');
+  }
+}
+
+function bootstrap_toolbox_list_group_views_pre_build(ViewExecutable $view){
+  if($view->display_handler->options['display_extenders']['bootstrap_toolbox_list_group_display_extender']['display_as_list_group']){
+    //~ kint('bootstrap_toolbox_list_group_views_pre_build');
+    $view->field['title']->options['element_class'] = 'test-class';
+  }
+}
+
+function bootstrap_toolbox_list_group_views_post_build(ViewExecutable $view){
+  if($view->display_handler->options['display_extenders']['bootstrap_toolbox_list_group_display_extender']['display_as_list_group']){
+    //~ kint('bootstrap_toolbox_list_group_views_post_build');
+  }
+}
+
+
+function bootstrap_toolbox_list_group_views_pre_execute(ViewExecutable $view) {
+  if($view->display_handler->options['display_extenders']['bootstrap_toolbox_list_group_display_extender']['display_as_list_group']){
+    //~ kint('bootstrap_toolbox_list_group_views_pre_execute');
+    //~ kint($view->field['title']->options['element_class']);
+  } 
+}
+
+
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for views_view.
+ */
+function bootstrap_toolbox_list_group_theme_suggestions_views_view_alter(array &$suggestions, array $variables) {
+  $view = $variables['view'];
+  if($view->display_handler->options['display_extenders']['bootstrap_toolbox_list_group_display_extender']['display_as_list_group']){
+    $suggestions[] = 'views_view__bootstrap_toolbox_list_group_view';
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for views_view_field.
+ */
+function bootstrap_toolbox_list_group_theme_suggestions_views_view_field_alter(array &$suggestions, array $variables) {
+  $view = $variables['view'];
+  if($view->display_handler->options['display_extenders']['bootstrap_toolbox_list_group_display_extender']['display_as_list_group']){
+    $suggestions[] = 'views_view_field__bootstrap_toolbox_list_group_view';
+  }
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function bootstrap_toolbox_list_group_theme($existing, $type, $theme, $path) {
+  $module_path = \Drupal::service('extension.list.module')->getPath('bootstrap_toolbox_list_group');
+  return [
+    'views_view__bootstrap_toolbox_list_group_view' => [
+      'variables' => ['view' => NULL],
+      'template' => 'views-view--bootstrap-toolbox-list-group-view',
+      'path' => $module_path.'/templates',
+    ],
+    'views_view_field__bootstrap_toolbox_list_group_view' => [
+      'variables' => ['view' => NULL],
+      'template' => 'views-view-field--bootstrap-toolbox-list-group-view',
+      'path' => $module_path.'/templates',
+    ],
+  ];
+}
+
+

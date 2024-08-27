@@ -1,7 +1,149 @@
-bootstrap_toolbox.settings:
-  path: '/admin/config/media/bootstrap-toolbox'
+bootstrap_toolbox.show_classes:
+  path: '/bootstrap-toolbox/show-classes'
   defaults:
-    _form: '\Drupal\bootstrap_toolbox\Form\BootstrapToolboxSettingsForm'
-    _title: 'Bootstrap Toolbox Settings'
+    _title: 'Show Classes'
+    _controller: '\Drupal\bootstrap_toolbox\Controller\ShowClassesController'
+  requirements:
+    _permission: 'access content'
+  options:
+    query:
+      classes: ''
+      mode: ''
+    bootstrap_toolbox:
+      edge_to_edge: FALSE
+      hide_sidebars: TRUE
+      hide_breadcrumb: TRUE
+      hide_title: FALSE
+
+style_wizar.form:
+  path: '/admin/config/bootstrap-toolbox/style-wizar'
+  defaults:
+    _form: '\Drupal\bootstrap_toolbox\Form\StyleWizarForm'
+    _title: 'Style wizar'
   requirements:
     _permission: 'administer site configuration'
+  options:
+    query:
+      classes: ''
+      style: ''
+      style_name: ''
+    bootstrap_toolbox:
+      edge_to_edge: FALSE
+      hide_sidebars: TRUE
+      hide_breadcrumb: TRUE
+      hide_title: FALSE
+
+bootstrap_toolbox.settings:
+  path: '/admin/config/bootstrap-toolbox'
+  defaults:
+    _title: 'Bootstrap Toolbox Settings'
+    _form: 'Drupal\bootstrap_toolbox\Form\MainSettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+bootstrap_toolbox.node_fields.settings:
+  path: '/admin/config/bootstrap-toolbox/node-fields'
+  defaults:
+    _title: 'Node fields Settings'
+    _form: 'Drupal\bootstrap_toolbox\Form\NodesExtraFieldsSettingForm'
+  requirements:
+    _permission: 'administer site configuration'
+
+entity.bootstrap_toolbox_wrapper.collection:
+  path: '/admin/config/bootstrap-toolbox/wrapper'
+  defaults:
+    _entity_list: 'bootstrap_toolbox_wrapper'
+    _title: 'Bootstrap Toolbox Wrappers'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_wrapper'
+
+entity.bootstrap_toolbox_wrapper.add_form:
+  path: '/admin/config/bootstrap-toolbox/wrapper/add'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_wrapper.add'
+    _title: 'Add wrapper'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_wrapper'
+
+entity.bootstrap_toolbox_wrapper.edit_form:
+  path: '/admin/config/bootstrap-toolbox/wrapper/{bootstrap_toolbox_wrapper}'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_wrapper.edit'
+    _title: 'Edit wrapper'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_wrapper'
+
+entity.bootstrap_toolbox_wrapper.delete_form:
+  path: '/admin/config/bootstrap-toolbox/wrapper/{bootstrap_toolbox_wrapper}/delete'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_wrapper.delete'
+    _title: 'Delete wrapper'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_wrapper'
+
+entity.bootstrap_toolbox_style.collection:
+  path: '/admin/config/bootstrap-toolbox/style'
+  defaults:
+    _entity_list: 'bootstrap_toolbox_style'
+    _title: 'Bootstrap Toolbox Styles'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_style'
+
+entity.bootstrap_toolbox_style.add_form:
+  path: '/admin/config/bootstrap-toolbox/style/add'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_style.add'
+    _title: 'Add style'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_style'
+
+entity.bootstrap_toolbox_style.edit_form:
+  path: '/admin/config/bootstrap-toolbox/style/{bootstrap_toolbox_style}'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_style.edit'
+    _title: 'Edit style'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_style'
+  options:
+    query:
+      classes: ''
+
+entity.bootstrap_toolbox_style.delete_form:
+  path: '/admin/config/bootstrap-toolbox/style/{bootstrap_toolbox_style}/delete'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_style.delete'
+    _title: 'Delete style'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_style'
+
+entity.bootstrap_toolbox_scope.collection:
+  path: '/admin/config/bootstrap-toolbox/scope'
+  defaults:
+    _entity_list: 'bootstrap_toolbox_scope'
+    _title: 'Bootstrap Toolbox Scope configuration'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_scope'
+
+entity.bootstrap_toolbox_scope.add_form:
+  path: '/admin/config/bootstrap-toolbox/scope/add'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_scope.add'
+    _title: 'Add a bootstrap toolbox scope'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_scope'
+
+entity.bootstrap_toolbox_scope.edit_form:
+  path: '/admin/config/bootstrap-toolbox/scope/{bootstrap_toolbox_scope}'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_scope.edit'
+    _title: 'Edit a bootstrap toolbox scope'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_scope'
+
+entity.bootstrap_toolbox_scope.delete_form:
+  path: '/admin/config/bootstrap-toolbox/scope/{bootstrap_toolbox_scope}/delete'
+  defaults:
+    _entity_form: 'bootstrap_toolbox_scope.delete'
+    _title: 'Delete a bootstrap toolbox scope'
+  requirements:
+    _permission: 'administer bootstrap_toolbox_scope'

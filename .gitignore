@@ -9,3 +9,4 @@
 
 # Ignore backup files with .copia extension
 *.copia
+node_modules/

@@ -1,26 +1,33 @@
-## INTRODUCTION
+![](../../BootstrapToolbox.png)
 
-The Bootstrap Toolbox Block to Card module is a DESCRIBE_THE_MODULE_HERE.
+# BOOTSTRAP TOOLBOX BLOCK TO CARD
 
-The primary use case for this module is:
+## INTRODUCCÍON
+El módulo Bootstrap Toolbox Block to Card forma parte de un conjunto de utilidades distribuidas con el módulo [Bootstrap Toolbox](../../README.md).
 
-- Use case #1
-- Use case #2
-- Use case #3
+## CARACTERÍSTICAS
+El módulo Bootstrap Toolbox Block to Card añade al formulario de configuración de los bloques las opciones necesarias para presentar los bloques de Drupal como cards de Bootstrap y añadir clases personalizadas tanto a la cabecera como al contenido y a la propia card.
 
-## REQUIREMENTS
+## REQUERIMIENTOS
 
-DESCRIBE_MODULE_DEPENDENCIES_HERE
+Bootstrap Toolbox Parallax requiere los siguientes módulos.
+- Bootstrap Toolbox
 
-## INSTALLATION
+Así mismo, requiere de las librerías de Bootstrap, que pueden ser proporcionadas por un tema, por cualquier otro módulo que instale y habilite las librerías o, directamente, por el módulo Bootstrap Toolbox.
 
-Install as you would normally install a contributed Drupal module.
-See: https://www.drupal.org/node/895232 for further information.
+Se ha comprobado la compatibilidad de Bootstrap Toolbox Parallax con los siquientes temas:
+- Barrio
+- Bootstrap5
+- Bootstrap
+- Guatiza Barrio
+- ## INSTALACIÓN
 
-## CONFIGURATION
-- Configuration step #1
-- Configuration step #2
-- Configuration step #3
+Bootstrap Toolbox Parallax se instala como cualquier otro módulo de Drupal.
+Encontrarás información adicional en https://www.drupal.org/node/895232.
+
+## CONFIGURACIÓN
+
+Bootstrap Toolbox Block to Card no requiere configuración alguna, pero si se desea se puede personalizar el comportamiento, sustituyendo los campos de texto que permiten introducir las clases adicionales que utilizará, por controles de selección que facilitan su tarea al usuario a la vez que limitan las clases a utilizar.
 
 ## MAINTAINERS
 

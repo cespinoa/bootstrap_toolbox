@@ -1,11 +1,10 @@
 name: 'Bootstrap Toolbox Block to Card'
 type: module
 description: 'Adds an option to render blocks as Bootstrap cards.'
-package: Custom
+package: 'Bootstrap Toolbox'
 core_version_requirement: ^10 || ^11
 dependencies:
   - drupal:bootstrap_toolbox
   - drupal:block
-  - drupal:block_form_alter
 stylesheets:
   - css/bootstrap-toolbox-block-to-card.css

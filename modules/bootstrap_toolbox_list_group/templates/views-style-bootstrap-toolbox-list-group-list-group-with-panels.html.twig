@@ -1,0 +1,36 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a view template to display a list of rows.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the container.
+ * - rows: A list of rows.
+ *   - attributes: The row's HTML attributes.
+ *   - content: The row's contents.
+ * - title: The title of this group of rows. May be empty.
+ *
+ * @see template_preprocess_views_style_bootstrap_toolbox_list_group_list_group_with_panels()
+ */
+#}
+<div class="row">
+  <div class="col-4">
+    <div class="list-group" id="list-tab" role="tablist">
+      
+      {% for row in bootstrap_list_group_with_panels_rows %}
+        <a class="list-group-item list-group-item-action {% if loop.first %} active {% endif %}" id="list-{{ loop.index }}" data-bs-toggle="list" href="#panel-{{ loop.index }}" role="tab" aria-controls="list-home">{{ row.item_list }}</a>
+      {% endfor %}
+      
+    </div>
+  </div>
+
+  <div class="col-8">
+    <div class="tab-content" id="nav-tabContent">
+      
+      {% for row in bootstrap_list_group_with_panels_rows %}
+        <div class="tab-pane fade{% if loop.first %} show active {% endif %}" id="panel-{{ loop.index }}" role="tabpanel" aria-labelledby="list-profile-list">{{ row.selected_panel }}</div>
+      {% endfor %}
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,16 @@
+.horizontal-form .form-item-horizontal .form-item {
+  display: flex!important;
+  align-items: center!important;
+}
+
+.horizontal-form .form-item-horizontal label {
+  margin-right: 10px!important;
+  min-width: 150px!important; /* Ajusta el ancho según sea necesario */
+}
+
+.horizontal-form .form-item-horizontal .form-item {
+  flex-grow: 1!important;
+}
+
+
+

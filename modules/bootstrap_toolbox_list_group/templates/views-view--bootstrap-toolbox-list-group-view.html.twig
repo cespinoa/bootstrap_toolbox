@@ -1,0 +1,24 @@
+{#
+/**
+ * @file
+ * Custom theme implementation for a views view.
+ *
+ * Available variables:
+ * - view: The view object.
+ * - rows: The rows of the view.
+ * - fields: The fields of the view.
+ *
+ * @see template_preprocess_views_view()
+ */
+#}
+
+<div class="views-view--bootstrap-toolbox-list-group list-group">
+  {% for row in rows %}
+      {% for field in row.fields %}
+        {{ field.content }}
+      {% endfor %}
+  {% endfor %}
+</div>
+
+
+
