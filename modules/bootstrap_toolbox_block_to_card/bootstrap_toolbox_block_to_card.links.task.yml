@@ -1,4 +1,0 @@
-bootstrap_toolbox_block_to_card.settings.tabs:
-  route_name: bootstrap_toolbox_block_to_card.settings
-  title: 'Block to Card settings'
-  base_route: bootstrap_toolbox.settings

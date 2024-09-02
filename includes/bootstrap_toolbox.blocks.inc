@@ -79,12 +79,14 @@ function bootstrap_toolbox_form_alter(&$form, \Drupal\Core\Form\FormStateInterfa
           '#title' => ('Extra wrapper'),
           '#default_value' => $settings['wrapper']?? 'none',
           '#options' => $wrapperOptions,
+          '#empty_option' => t('None'),
         ];
         $form['bootstrap_toolbox']['styles'] = [
           '#type' => 'select',
           '#title' => ('Extra classes'),
           '#default_value' => $settings['styles']?? 'none',
           '#options' => $stylesOptions,
+          '#empty_option' => t('None'),
         ];
         array_unshift($form['#submit'], 'bootstrap_toolbox_submit_block_form');
       }
@@ -222,8 +224,6 @@ function bootstrap_toolbox_preprocess_layout(&$variables) {
             if($styles && $styles != 'none'){
               $styles = $utilityservice->getStyleById($styles);
             }
-            kint($wrapper);
-            kint($styles);
             if($wrapper && !$styles){
               $variables['content']['content'][$key]['#prefix'] = '<div class="'.$wrapper.'">';
               $variables['content']['content'][$key]['#suffix'] = '</div>';

@@ -25,13 +25,7 @@ apply_edition_mode:
     - core/jquery
     - core/once
 
-remove_empty_paragraphs:
-  version: 1.x
-  css:
-    theme:
-      css/remove-empty-paragraphs.css: {}
-  js:
-    js/remove-empty-paragraphs.js: {}
+
 
 inline_form:
   version: 1.x

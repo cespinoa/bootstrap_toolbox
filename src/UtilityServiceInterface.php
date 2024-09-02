@@ -207,7 +207,7 @@ interface UtilityServiceInterface {
    * @return array $viewModes
    *   The view modes array.
    */
-  public function getViewModes(string $targetType, bool $includeFullMode = FALSE, array $includeFieldsMode = NULL): array;
+  public function getViewModes(string $targetType, bool $includeFullMode = FALSE, array $includeFieldsMode = []): array;
 
   /**
    * Gets fields from a bundle, with title and body, but without the rest of the base fields.
@@ -230,7 +230,18 @@ interface UtilityServiceInterface {
    *
    * @return object
    * */
-  public function getRenderedEntity(string $entityType,string $viewMode, string $entityId): array;
+  public function getEntityRenderArray(string $entityType,string $viewMode, string $entityId): array;
+
+  /**
+   * Get rendered entity
+   *
+   * @param string $entityType
+   * @param string $viewMode
+   * @param string $entityId
+   *
+   * @return object
+   * */
+  public function getRenderedEntity(string $entityType,string $viewMode, string $entityId): object;
 
   /**
    * Provide tags styles
@@ -266,7 +277,31 @@ interface UtilityServiceInterface {
    *
    * @return object
    * */
+
+  /**
+   * Get media file data by mediaId and imageStyle
+   *
+   * @param string $mediaId
+   * @param string $imageStyle
+   *
+   * @return array
+   * */
+  public function getMediaFileDataByMediaIdAndImageStyle(string $mediaId, string $imageStyle): array;
+
+  
   public function createMarkup($text):object;
+
+ /**
+   * Get entities by entity Type and bundle
+   *
+   * @param string $entityType
+   * @param string $bundle
+   * @param string|null $sortField
+   * @param string $direction
+   *
+   * @return array
+   */
+  public function getEntitiesByTypeAndBundle($entityType, $bundle, $sortField = NULL, $direction = 'asc'): array;
 
   /**
    * Get an entity by entity Type and uuid

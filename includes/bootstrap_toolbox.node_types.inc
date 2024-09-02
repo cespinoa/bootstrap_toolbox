@@ -36,6 +36,4 @@ function bootstrap_toolbox_form_node_type_edit_form_builder($entityType, \Drupal
 
 
 
-//~ function bootstrap_toolbox_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id){
-  //~ kint($form_id);
-//~ }
+

@@ -130,7 +130,7 @@ function bootstrap_toolbox_preprocess_page(array &$variables) {
   $routeName = \Drupal::routeMatch()->getRouteName();
   $node = \Drupal::routeMatch()->getParameter('node');
   if (($routeName == 'entity.node.edit_form' && $node instanceof \Drupal\node\NodeInterface) ||
-      ($routeName == 'node.add' && $formid == 'node_article_form') ) {
+      ($routeName == 'node.add' && isset($formid) && $formid == 'node_article_form') ) {
     $hideSidebars = FALSE;
     if($editModeHideSidebars){
       $hideSidebars = TRUE;
@@ -198,16 +198,6 @@ function bootstrap_toolbox_preprocess_page(array &$variables) {
     $variables['#attached']['drupalSettings']['apply_edition_mode'] = $vars;
   }
 
-  $variables['#attached']['library'][] = 'bootstrap_toolbox/remove_empty_paragraphs';
-
-  //~ if(\Drupal::request()->query->get('mode')=='show_classess'){
-    //~ foreach($variables['page'] as $key=>$region){
-      //~ if(substr($key,0,1) != '#' && $key != 'content'){
-        //~ $variables['page'][$key] = NULL;
-      //~ }
-    //~ }
-  //~ }
-  
    
   
 }

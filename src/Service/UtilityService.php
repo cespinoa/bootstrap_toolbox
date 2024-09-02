@@ -598,12 +598,12 @@ class UtilityService implements  UtilityServiceInterface {
    * @return array $viewModes
    *   The view modes array.
    */
-  public function getViewModes(string $targetType, bool $includeFullMode = FALSE, array $aditionalViewModeOptions = NULL): array{
+  public function getViewModes(string $targetType, bool $includeFullMode = FALSE, array $aditionalViewModeOptions = []): array{
 
     $viewModes = $this->entityDisplayRepository->getViewModes($targetType);
     $viewModeOptions = [];
     if($includeFullMode){
-      $viewModeOptions['full'] = $viewModes['full']['label'];
+      $viewModeOptions['default'] = t('Default');
     }
     
     foreach ($viewModes as $viewMode => $info) {
@@ -632,6 +632,7 @@ class UtilityService implements  UtilityServiceInterface {
   public function getBundleFields(string $entity, string $bundle, array $types = NULL ): array {
     
     $fields = $this->entityFieldManager->getFieldDefinitions($entity, $bundle);
+    
 
     $fieldOptions = [];
 
@@ -639,7 +640,7 @@ class UtilityService implements  UtilityServiceInterface {
       $field_type = $field_definition->getType();
       $field_storage = $field_definition->getFieldStorageDefinition();
     
-      if ($field_name == 'title' || $field_name == 'body' || !$field_storage->isBaseField()) {
+      if ($field_name == 'title' || $field_name == 'body' || $field_name == 'info' || !$field_storage->isBaseField()) {
         if($types && !in_array($field_storage->getType(),$types)){
           break;
         }
@@ -659,7 +660,7 @@ class UtilityService implements  UtilityServiceInterface {
    *
    * @return object
    * */
-  public function getRenderedEntity(string $entityType,string $viewMode, string $entityId): array {
+  public function getEntityRenderArray(string $entityType,string $viewMode, string $entityId): array {
     $entity = $this->entityTypeManager->getStorage($entityType)->load($entityId);
     $renderArray = $this->entityTypeManager->getViewBuilder($entityType)->view($entity, $viewMode);
     if($renderArray){
@@ -667,7 +668,24 @@ class UtilityService implements  UtilityServiceInterface {
     } else {
       return NULL;
     }
-    
+  }
+
+  /**
+   * Get rendered entity
+   *
+   * @param string $entityType
+   * @param string $viewMode
+   * @param string $entityId
+   *
+   * @return object
+   * */
+  public function getRenderedEntity(string $entityType,string $viewMode, string $entityId): object {
+    $renderArray = $this->getEntityRenderArray($entityType, $viewMode, $entityId);
+    if($renderArray){
+      return \Drupal::service('renderer')->render($renderArray);;
+    } else {
+      return NULL;
+    }
   }
 
   /**
@@ -677,6 +695,7 @@ class UtilityService implements  UtilityServiceInterface {
    * */
   public function getTagStyles(): array {
     return [
+      'h1' => 'H1',
       'h2' => 'H2',
       'h3' => 'H3',
       'h4' => 'H4',
@@ -730,6 +749,34 @@ class UtilityService implements  UtilityServiceInterface {
   }
 
   /**
+   * Get media file data by mediaId and imageStyle
+   *
+   * @param string $mediaId
+   * @param string $imageStyle
+   *
+   * @return array
+   * */
+  public function getMediaFileDataByMediaIdAndImageStyle(string $mediaId, string $imageStyle): array {
+    $media = Media::load($mediaId);
+    $mediaFieldName = $media->getSource()->getConfiguration()['source_field'];
+    $imageField = $media->get($mediaFieldName);
+    if (!$imageField->isEmpty()) {
+      $data = $imageField->first()->toArray();
+      if($imageStyle != 'default'){
+        $data['url'] = ImageStyle::load($imageStyle)->buildUrl($imageField->entity->getFileUri());
+      } else {
+        $imageField = $media->get($mediaFieldName)->entity;
+        $imageUri = $imageField->getFileUri();
+        $data['url'] = $this->fileUrlGenerator->generateAbsoluteString($imageUri);
+      }
+      
+      return $data;
+    }
+    return [];
+  }
+
+
+  /**
    * Returns markup from text
    *
    * @param strint $text
@@ -739,6 +786,35 @@ class UtilityService implements  UtilityServiceInterface {
   public function createMarkup($text):object {
     return  Markup::create($text);
   }
+
+  /**
+   * Get entities by entity Type and bundle
+   *
+   * @param string $entityType
+   * @param string $bundle
+   * @param string|null $sortField
+   * @param string $direction
+   *
+   * @return array
+   */
+  public function getEntitiesByTypeAndBundle($entityType, $bundle, $sortField = NULL, $direction = 'asc'): array {
+    $query = $this->entityTypeManager->getStorage($entityType)->getQuery();
+    $query->condition('type', $bundle);
+    
+    // Añadir la ordenación si se proporciona un campo de orden
+    if ($sortField) {
+        $query->sort($sortField, $direction);
+    }
+    
+    // Opcionalmente deshabilitar la verificación de acceso
+    $query->accessCheck(FALSE);
+    
+    $entity_ids = $query->execute();
+    $entities = $this->entityTypeManager->getStorage($entityType)->loadMultiple($entity_ids);
+    
+    return $entities;
+  }
+
 
   /**
    * Get an entity by entity Type and uuid

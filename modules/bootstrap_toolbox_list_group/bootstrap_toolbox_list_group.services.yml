@@ -1,4 +1,0 @@
-services:
-  bootstrap_toolbox_list_group.initial:
-    class: Drupal\bootstrap_toolbox_list_group\InitialSettingsService
-    arguments: []

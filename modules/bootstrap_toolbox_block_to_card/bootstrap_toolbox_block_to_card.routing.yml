@@ -1,7 +1,0 @@
-bootstrap_toolbox_block_to_card.settings:
-  path: '/admin/config/bootstrap-toolbox/block-to-card'
-  defaults:
-    _title: 'Block to Card Settings'
-    _form: 'Drupal\bootstrap_toolbox_block_to_card\Form\SettingsForm'
-  requirements:
-    _permission: 'administer site configuration'

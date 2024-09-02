@@ -19,7 +19,7 @@
  */
 function bootstrap_toolbox_field_formatter_third_party_settings_form(\Drupal\Core\Field\FormatterInterface $plugin, \Drupal\Core\Field\FieldDefinitionInterface $fieldDefinition, $viewMode, array $form, \Drupal\Core\Form\FormStateInterface $formState) {
   $element = [];
-
+  
   $utilityservice = \Drupal::service('bootstrap_toolbox.utility_service');
   $wrapperOptions = $utilityservice->getWrapperList();
   $classesOptions = $utilityservice->getScopeListFiltered(['field_formatters']);
@@ -99,14 +99,4 @@ function bootstrap_toolbox_field_formatter_settings_summary_alter(array &$summar
   }
 }
 
-/**
- * Implements hook_preprocess_field().
- */
-function bootstrap_toolbox_preprocess_field(array &$variables){
-  //~ $settings = isset($variables['element']['#third_party_settings']) 
-    //~ ? ($variables['element']['#third_party_settings']['bootstrap_toolbox']['settings'] ?? []) 
-    //~ : [];
-  //~ if(!empty($settings)){
-    //~ template_preprocess_field__bootstrap_toolbox($variables);
-  //~ }
-}
+

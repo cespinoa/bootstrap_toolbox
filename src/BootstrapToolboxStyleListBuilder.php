@@ -104,7 +104,7 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
     $scope = [$scope];//  $scope = is_array($scope) ? $scope : [$scope];
     //~ }
     $entities = $this->utilityService->getStyleByScope($scope);
-    //~ kint($entities);
+    
     return array_keys($entities);
   }
   
