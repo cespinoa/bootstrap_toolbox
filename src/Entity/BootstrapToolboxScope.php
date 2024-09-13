@@ -71,8 +71,8 @@ final class BootstrapToolboxScope extends ConfigEntityBase implements BootstrapT
    */
   protected bool $system = FALSE;
 
-  /*
-   * Gets scope description
+  /**
+   * Gets scope description.
    *
    * @return string
    *   The description.
@@ -81,8 +81,8 @@ final class BootstrapToolboxScope extends ConfigEntityBase implements BootstrapT
     return $this->description;
   }
 
-  /*
-   * Gets scope system condition
+  /**
+   * Gets scope system condition.
    *
    * @return bool
    *   The system condition.
@@ -90,15 +90,5 @@ final class BootstrapToolboxScope extends ConfigEntityBase implements BootstrapT
   public function isSystem(): bool {
     return $this->system;
   }
-
-  /**
-   * {@inheritdoc}
-   */
-  //~ public function delete() {
-    //~ if ($this->get('system')) {
-      //~ throw new \Drupal\Core\Entity\EntityStorageException(t('Cannot delete a system scope.'));
-    //~ }
-    //~ parent::delete();
-  //~ }
 
 }

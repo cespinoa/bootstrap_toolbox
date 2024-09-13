@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\bootstrap_toolbox\Form;
 
+use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxScope;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxScope;
 
 /**
  * Bootstrap Toolbox Scope form.
@@ -16,9 +16,9 @@ final class BootstrapToolboxScopeForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $formstate): array {
+  public function form(array $form, FormStateInterface $form_state): array {
 
-    $form = parent::form($form, $formstate);
+    $form = parent::form($form, $form_state);
 
     $form['label'] = [
       '#type' => 'textfield',
@@ -46,7 +46,7 @@ final class BootstrapToolboxScopeForm extends EntityForm {
     $form['system'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('System scope'),
-      '#default_value' => $this->entity->get('system')?? FALSE,
+      '#default_value' => $this->entity->get('system') ?? FALSE,
     ];
 
     if ($this->entity->get('system')) {
@@ -60,8 +60,8 @@ final class BootstrapToolboxScopeForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $formstate): int {
-    $result = parent::save($form, $formstate);
+  public function save(array $form, FormStateInterface $form_state): int {
+    $result = parent::save($form, $form_state);
     $messageArgs = ['%label' => $this->entity->label()];
     $this->messenger()->addStatus(
       match($result) {
@@ -69,7 +69,7 @@ final class BootstrapToolboxScopeForm extends EntityForm {
         \SAVED_UPDATED => $this->t('Updated example %label.', $messageArgs),
       }
     );
-    $formstate->setRedirectUrl($this->entity->toUrl('collection'));
+    $form_state->setRedirectUrl($this->entity->toUrl('collection'));
     return $result;
   }
 

@@ -1,10 +1,12 @@
 <?php
 
 declare(strict_types=1);
+
 namespace Drupal\bootstrap_toolbox\Controller;
+
 use Drupal\Core\Controller\ControllerBase;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Returns responses for Bootstrap Toolbox routes.
@@ -36,7 +38,7 @@ final class ShowClassesController extends ControllerBase {
       $container->get('request_stack')
     );
   }
-  
+
   /**
    * Builds the response.
    */

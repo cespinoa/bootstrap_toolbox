@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\bootstrap_toolbox\Form;
 
+use Drupal\bootstrap_toolbox\UtilityServiceInterface;
+use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Extension\ExtensionDiscovery;
-use Drupal\bootstrap_toolbox\UtilityServiceInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+use Drupal\Core\Extension\ThemeHandlerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -15,16 +18,36 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 final class MainSettingsForm extends ConfigFormBase {
 
+  /**
+   * @var Drupal\Core\Theme\ThemeHandlerInterface
+   *
+   * ThemeHandlerInterface service
+   * */
+  protected $themeHandler;
 
+  /**
+   * @var Drupal\bootstrap_toolbox\UtilityServiceInterface
+   *
+   * The utility service
+   * */
   protected $utilityService;
 
-  public function __construct(UtilityServiceInterface $utilityservice) {
-    $this->utilityService = $utilityservice;
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(UtilityServiceInterface $utilityService,
+  ThemeHandlerInterface $themeHandler ) {
+    $this->utilityService = $utilityService;
+    $this->themeHandler = $themeHandler;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('bootstrap_toolbox.utility_service')
+      $container->get('bootstrap_toolbox.utility_service'),
+      $container->get('theme_handler')
     );
   }
 
@@ -48,7 +71,7 @@ final class MainSettingsForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
 
     $config = $this->config('bootstrap_toolbox.settings');
-    
+
     $form['verticaltabs'] = [
       '#type' => 'vertical_tabs',
     ];
@@ -88,6 +111,22 @@ final class MainSettingsForm extends ConfigFormBase {
       '#group' => 'verticaltabs',
     ];
 
+    $form['custom_css'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Custom css'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#group' => 'verticaltabs',
+    ];
+
+    $form['available_themes'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Available themes'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#group' => 'verticaltabs',
+    ];
+
     $form['library']['selected_library'] = [
       '#type' => 'select',
       '#title' => $this->t('Select a library'),
@@ -105,7 +144,15 @@ final class MainSettingsForm extends ConfigFormBase {
         'hide_title' => t('Hide title'),
         'hide_breadcrumb' => t('Hide breadcrumb'),
       ],
-      '#default_value' => $config->get('front_page_options') ? $config->get('front_page_options') : [], 
+      '#default_value' => $config->get('front_page_options') ? $config->get('front_page_options') : [],
+    ];
+
+    $form['fp_options']['custom_theme'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Custom theme'),
+      '#options' => $this->utilityService->getAllowedThemes() ,
+      '#empty_option' => $this->t('None'),
+      '#default_value' => $config->get('custom_theme') ? $config->get('custom_theme') : NULL,
     ];
 
     $form['edge_to_edge_control']['selected_theme'] = [
@@ -114,7 +161,7 @@ final class MainSettingsForm extends ConfigFormBase {
       '#options' => $this->utilityService->getKnownThemes(),
       '#default_value' => $config->get('selected_theme') ? $config->get('selected_theme') : [],
     ];
-    
+
     $form['edge_to_edge_control']['sidebars_variables'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Sidebars classes'),
@@ -126,7 +173,7 @@ final class MainSettingsForm extends ConfigFormBase {
         ],
       ],
     ];
-    
+
     $form['edge_to_edge_control']['main_area_selector'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Main area selector'),
@@ -138,7 +185,7 @@ final class MainSettingsForm extends ConfigFormBase {
         ],
       ],
     ];
-    
+
     $form['edge_to_edge_control']['main_area_class'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Fluid main area class'),
@@ -197,7 +244,7 @@ final class MainSettingsForm extends ConfigFormBase {
           ':input[name="selected_theme"]' => ['value' => 'custom'],
         ],
       ],
-    ]; 
+    ];
 
     $form['edge_to_edge_control']['edit_mode_advanced_area_remove_class'] = [
       '#type' => 'textfield',
@@ -213,7 +260,7 @@ final class MainSettingsForm extends ConfigFormBase {
 
     $form['edit_mode_options']['edit_mode_hide_sidebars'] = [
       '#type' => 'checkbox',
-      '#title' =>$this->t('Hide sidebars while edit node'),
+      '#title' => $this->t('Hide sidebars while edit node'),
       '#default_value' => $config->get('edit_mode_hide_sidebars') ? $config->get('edit_mode_hide_sidebars') : 'false',
     ];
 
@@ -256,7 +303,40 @@ final class MainSettingsForm extends ConfigFormBase {
           ':input[name="change_areas_width"]' => ['checked' => TRUE],
         ],
       ],
-    ]; 
+    ];
+
+    $form['available_themes']['selected_themes'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Available themes'),
+      '#options' => $this->getThemes(),
+      '#default_value' => $config->get('selected_themes') ? $config->get('selected_themes') : '', 
+    ];
+
+    $publicPath = \Drupal::service('file_system')->realpath('public://');
+    $fileUrl = $publicPath . '/bootstrap_toolbox/custom.css';
+
+    if (file_exists($fileUrl)) {
+      $msg = $this->t('You can customize your css by editing the file ');
+      $form['custom_css']['message'] = [
+        '#markup' => $msg . '<br/><i>' . $fileUrl . '</i>',
+      ];
+    }
+    else {
+      $msgFirst = $this->t('Bootstrap Toolbox can create a CSS file for you that you can customize your site with.');
+      $msgSecond = $this->t('This will allow you to make all the changes you need without affecting the CSS of the theme or the Bootstrap Toolbox tools.');
+      $form['custom_css']['message'] = [
+        '#markup' => '<p>' . $msgFirst . '<br/>' . $msgSecond . '</p>',
+      ];
+      $url = Url::fromUri('internal:/create-bootstrap-toolbox');
+      $link = Link::fromTextAndUrl($this->t('Create file'), $url)->toRenderable();
+      $link['#attributes']['class'] = ['btn', 'btn-primary', 'button', 'button--primary'];
+
+      // Añadir el enlace al formulario.
+      $form['custom_css']['create_toolbox_link'] = [
+        '#type' => 'markup',
+        '#markup' => \Drupal::service('renderer')->render($link),
+      ];
+    }
 
     return parent::buildForm($form, $form_state);
   }
@@ -265,16 +345,6 @@ final class MainSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state): void {
-    // @todo Validate the form here.
-    // Example:
-    // @code
-    //   if ($form_state->getValue('example') === 'wrong') {
-    //     $form_state->setErrorByName(
-    //       'message',
-    //       $this->t('The value is not correct.'),
-    //     );
-    //   }
-    // @endcode
     parent::validateForm($form, $form_state);
   }
 
@@ -282,33 +352,30 @@ final class MainSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    $this->config('bootstrap_toolbox.settings')
-      ->set('selected_library', $form_state->getValue('selected_library'))
-      ->set('front_page_options', $form_state->getValue('front_page_options'))
-      ->set('selected_theme', $form_state->getValue('selected_theme'))
-      ->set('sidebars_variables', $form_state->getValue('sidebars_variables'))
-      ->set('main_area_selector', $form_state->getValue('main_area_selector'))
-      ->set('main_area_class', $form_state->getValue('main_area_class'))
-      ->set('central_panel_class', $form_state->getValue('central_panel_class'))
-      ->set('edit_mode_fields_area', $form_state->getValue('edit_mode_fields_area'))
-      ->set('edit_mode_advanced_area', $form_state->getValue('edit_mode_advanced_area'))
-      ->set('edit_mode_fields_area_remove_class', $form_state->getValue('edit_mode_fields_area_remove_class'))
-      ->set('edit_mode_advanced_area_remove_class', $form_state->getValue('edit_mode_advanced_area_remove_class'))
-      ->set('edit_mode_fields_area_add_class', $form_state->getValue('edit_mode_fields_area_add_class'))
-      ->set('edit_mode_advanced_area_add_class', $form_state->getValue('edit_mode_advanced_area_add_class'))
-      ->set('edit_mode_hide_sidebars', $form_state->getValue('edit_mode_hide_sidebars'))
-      ->set('edit_mode_edge_to_edge', $form_state->getValue('edit_mode_edge_to_edge'))
-      ->set('change_areas_width', $form_state->getValue('change_areas_width'))
-      ->save();
-
+    $settings = $form_state->getValues();
+    unset($settings['submit']);
+    unset($settings['form_build_id']);
+    unset($settings['form_token']);
+    unset($settings['form_id']);
+    unset($settings['op']);
+    foreach($settings as $setting=>$value){
+      $this->config('bootstrap_toolbox.settings')
+        ->set($setting,$value)
+        ->save();
+    }
     parent::submitForm($form, $form_state);
   }
 
-  protected function getExtensions() {
+  /**
+   * Get installed modules and themes with Bootstrap libraries.
+   *
+   * @return array
+   */
+  protected function getExtensions():array {
     // Get all extensions available in the system.
     $extensionDiscovery = new ExtensionDiscovery(\Drupal::root());
     $extensions = $extensionDiscovery->scan('module') + $extensionDiscovery->scan('theme');
-  
+
     $libraryOptions = [];
     $libraryOptions['default'] = $this->t('Default');
     foreach ($extensions as $extension => $extensionInfo) {
@@ -323,6 +390,21 @@ final class MainSettingsForm extends ConfigFormBase {
   }
 
   /**
+   * Get all installed themes.
+   *
+   * @return array
+   */
+  protected function getThemes():array {
+    $extensionDiscovery = new ExtensionDiscovery(\Drupal::root());
+    $extensions = $extensionDiscovery->scan('theme');
+    $themes = [];
+    foreach ($extensions as $extension => $extensionInfo) {
+      $themes[$extension] = $this->themeHandler->getName($extension);
+    }
+    return $themes;
+  }
+
+  /**
    * Check if the library contains bootstrap related files.
    *
    * @param array $library
@@ -332,14 +414,14 @@ final class MainSettingsForm extends ConfigFormBase {
    *   TRUE if the library contains bootstrap related files, FALSE otherwise.
    */
   protected function isBootstrapLibrary(array $library) {
-    
+
     foreach (['css', 'js'] as $type) {
       if (!empty($library[$type])) {
         foreach ($library[$type] as $files) {
           foreach ($files as $file => $attributes) {
             if (is_string($attributes) && strpos($attributes, 'bootstrap') !== FALSE) {
-              $attributes = explode('/',$attributes)[1];
-              if (strpos($attributes, 'bootstrap') !== FALSE){
+              $attributes = explode('/', $attributes)[1];
+              if (strpos($attributes, 'bootstrap') !== FALSE) {
                 return TRUE;
               }
             }
@@ -349,6 +431,5 @@ final class MainSettingsForm extends ConfigFormBase {
     }
     return FALSE;
   }
-  
 
 }

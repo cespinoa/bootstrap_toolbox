@@ -6,4 +6,3 @@ core_version_requirement: ^10 || ^11
 configure: bootstrap_toolbox.settings
 dependencies:
   - drupal:views
-

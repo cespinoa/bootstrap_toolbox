@@ -9,13 +9,12 @@ use Drupal\Core\Theme\ThemeInitializationInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-
 /**
  * Implements a custom form for Bootstrap style preview.
  */
 class StylePreviewForm extends FormBase {
 
-   /**
+  /**
    * The theme manager service.
    *
    * @var \Drupal\Core\Theme\ThemeManagerInterface
@@ -37,7 +36,10 @@ class StylePreviewForm extends FormBase {
    * @param \Drupal\Core\Theme\ThemeInitializationInterface $theme_initialization
    *   The theme initialization service.
    */
-  public function __construct(ThemeManagerInterface $theme_manager, ThemeInitializationInterface $theme_initialization) {
+  public function __construct(
+    ThemeManagerInterface $theme_manager,
+    ThemeInitializationInterface $theme_initialization,
+  ) {
     $this->themeManager = $theme_manager;
     $this->themeInitialization = $theme_initialization;
   }
@@ -64,16 +66,16 @@ class StylePreviewForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // Guarda el tema activo actual para poder restaurarlo después, si es necesario.
-    $current_active_theme = $this->themeManager->getActiveTheme();
-    
+    $currentActiveTheme = $this->themeManager->getActiveTheme();
+
     // Cambia el tema al deseado, por ejemplo, el tema predeterminado del sitio.
-    $site_theme = \Drupal::config('system.theme')->get('default');
-    
-    if ($site_theme && $site_theme != $current_active_theme->getName()) {
-      $this->themeManager->setActiveTheme($this->themeInitialization->initTheme($site_theme));
+    $siteTheme = \Drupal::config('system.theme')->get('default');
+
+    if ($siteTheme && $siteTheme != $currentActiveTheme->getName()) {
+      $this->themeManager->setActiveTheme($this->themeInitialization->initTheme($siteTheme));
     }
     // Bootstrap class options.
-    $text_colors = [
+    $textColors = [
       '' => $this->t('Select text color'),
       'text-primary' => $this->t('Primary'),
       'text-secondary' => $this->t('Secondary'),
@@ -91,7 +93,7 @@ class StylePreviewForm extends FormBase {
       'text-black-50' => $this->t('Black 50'),
     ];
 
-    $background_colors = [
+    $backgroundColors = [
       '' => $this->t('Select background color'),
       'bg-primary' => $this->t('Primary'),
       'bg-primary-subtle' => $this->t('Primary subtle'),
@@ -117,7 +119,7 @@ class StylePreviewForm extends FormBase {
       'bg-transparent' => $this->t('Transparent'),
     ];
 
-    $text_sizes = [
+    $textSizes = [
       '' => $this->t('Select text size'),
       'fs-1' => $this->t('Size 1'),
       'fs-2' => $this->t('Size 2'),
@@ -190,7 +192,7 @@ class StylePreviewForm extends FormBase {
       'fst-italic' => $this->t('Italic'),
     ];
 
-    $line_height = [
+    $lineHeight = [
       '' => $this->t('Select line height'),
       'lh-1' => $this->t('Minimum'),
       'lh-sm' => $this->t('Medium'),
@@ -209,7 +211,7 @@ class StylePreviewForm extends FormBase {
     $form['custom_text_color'] = [
       '#type' => 'select',
       '#title' => $this->t('Text Color'),
-      '#options' => $text_colors,
+      '#options' => $textColors,
       '#ajax' => [
         'callback' => '::updatePreview',
         'wrapper' => 'preview-wrapper',
@@ -219,7 +221,7 @@ class StylePreviewForm extends FormBase {
     $form['custom_background_color'] = [
       '#type' => 'select',
       '#title' => $this->t('Background Color'),
-      '#options' => $background_colors,
+      '#options' => $backgroundColors,
       '#ajax' => [
         'callback' => '::updatePreview',
         'wrapper' => 'preview-wrapper',
@@ -229,7 +231,7 @@ class StylePreviewForm extends FormBase {
     $form['custom_text_size'] = [
       '#type' => 'select',
       '#title' => $this->t('Text Size'),
-      '#options' => $text_sizes,
+      '#options' => $textSizes,
       '#ajax' => [
         'callback' => '::updatePreview',
         'wrapper' => 'preview-wrapper',
@@ -285,7 +287,7 @@ class StylePreviewForm extends FormBase {
         'wrapper' => 'preview-wrapper',
       ],
     ];
-       
+
     $form['custom_weight'] = [
       '#type' => 'select',
       '#title' => $this->t('Font weight'),
@@ -309,7 +311,7 @@ class StylePreviewForm extends FormBase {
     $form['custom_line_height'] = [
       '#type' => 'select',
       '#title' => $this->t('Line height'),
-      '#options' => $line_height,
+      '#options' => $lineHeight,
       '#ajax' => [
         'callback' => '::updatePreview',
         'wrapper' => 'preview-wrapper',
@@ -335,11 +337,11 @@ class StylePreviewForm extends FormBase {
       ],
     ];
 
-    foreach($form as $key => $control){
+    foreach ($form as $key => $control) {
       $form[$key]['#prefix'] = '<div class="form-inline-item">';
       $form[$key]['#suffix'] = '</div>';
     }
-    
+
     $form['preview'] = [
       '#type' => 'markup',
       '#markup' => '<div class="preview-text">' . $this->t('Sample Text') . '</div>',
@@ -359,10 +361,7 @@ class StylePreviewForm extends FormBase {
       ],
     ];
 
-
     $form['#attached']['library'][] = 'bootstrap_toolbox/inline_form';
-
-    
 
     return $form;
   }
@@ -371,17 +370,17 @@ class StylePreviewForm extends FormBase {
    * {@inheritdoc}
    */
   public function updatePreview(array &$form, FormStateInterface $form_state) {
-    $text_color = $form_state->getValue('custom_text_color');
-    $background_color = $form_state->getValue('custom_background_color');
-    $text_size = $form_state->getValue('custom_text_size');
+    $textColor = $form_state->getValue('custom_text_color');
+    $backgroundColor = $form_state->getValue('custom_background_color');
+    $textSize = $form_state->getValue('custom_text_size');
     $padding = $form_state->getValue('custom_padding');
     $margin = $form_state->getValue('custom_margin');
 
-    $classes = array_filter([$text_color, $background_color, $text_size, $padding, $margin]);
-    $class_string = implode(' ', $classes);
-    $class_string = $this->processClasses($form_state->getValues());
-    $form['preview']['#markup'] = '<div class="preview-text ' . $class_string . '">' . $this->t('Selected classes: ') . $class_string . '</div>';
-    
+    $classes = array_filter([$textColor, $backgroundColor, $textSize, $padding, $margin]);
+    $classString = implode(' ', $classes);
+    $classString = $this->processClasses($form_state->getValues());
+    $form['preview']['#markup'] = '<div class="preview-text ' . $classString . '">' . $this->t('Selected classes:') . $classString . '</div>';
+
     return $form['preview'];
   }
 
@@ -396,16 +395,16 @@ class StylePreviewForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function processClasses($values){
+  public function processClasses($values) {
     $classes = [];
-    foreach($values as $key => $class){
-      if(substr($key,0,6) == 'custom'){
+    foreach ($values as $key => $class) {
+      if (substr($key, 0, 6) == 'custom') {
         $classes[] = $class;
       }
     }
     $classes = array_filter($classes);
-    $class_string = implode(' ',$classes);
-    return $class_string;
+    $classString = implode(' ', $classes);
+    return $classString;
   }
 
 }

@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\bootstrap_toolbox\Form;
 
+use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxStyle;
+use Drupal\bootstrap_toolbox\UtilityServiceInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxStyle;
-
-use Drupal\bootstrap_toolbox\UtilityServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -16,26 +15,32 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 final class BootstrapToolboxStyleForm extends EntityForm {
 
+  /**
+   * Drupal\bootstrap_toolbox\UtilityServiceInterface.
+   *
+   * The utility service.
+   * */
   protected $utilityService;
 
-  public function __construct(UtilityServiceInterface $utilityservice) {
-    $this->utilityService = $utilityservice;
+  public function __construct(UtilityServiceInterface $utilityService) {
+    $this->utilityService = $utilityService;
   }
 
+  /**
+   * Inherit.
+   */
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('bootstrap_toolbox.utility_service')
     );
   }
 
-  
-  
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $formstate): array {
+  public function form(array $form, FormStateInterface $form_state): array {
 
-    $form = parent::form($form, $formstate);
+    $form = parent::form($form, $form_state);
 
     $form['label'] = [
       '#type' => 'textfield',
@@ -61,7 +66,7 @@ final class BootstrapToolboxStyleForm extends EntityForm {
     ];
 
     $classes = $this->getRequest()->query->get('classes', '');
-    if(!$classes){
+    if (!$classes) {
       $classes = $this->entity->get('classes');
     }
 
@@ -78,15 +83,14 @@ final class BootstrapToolboxStyleForm extends EntityForm {
       '#options' => $this->utilityService->getScopeList(),
     ];
 
-
     return $form;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $formstate): int {
-    $result = parent::save($form, $formstate);
+  public function save(array $form, FormStateInterface $form_state): int {
+    $result = parent::save($form, $form_state);
     $messageArgs = ['%label' => $this->entity->label()];
     $this->messenger()->addStatus(
       match($result) {
@@ -94,10 +98,8 @@ final class BootstrapToolboxStyleForm extends EntityForm {
         \SAVED_UPDATED => $this->t('Updated style %label.', $messageArgs),
       }
     );
-    $formstate->setRedirectUrl($this->entity->toUrl('collection'));
+    $form_state->setRedirectUrl($this->entity->toUrl('collection'));
     return $result;
   }
-
-
 
 }

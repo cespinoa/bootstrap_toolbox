@@ -10,12 +10,6 @@ apply_container_class:
     - core/jquery
     - core/once
 
-edge_to_edge_hakcs:
-  version: 1.x
-  css:
-    theme:
-      css/edge-to-edge-hakcs.css: {}
-
 apply_edition_mode:
   version: 1.x
   js:
@@ -25,11 +19,14 @@ apply_edition_mode:
     - core/jquery
     - core/once
 
-
-
 inline_form:
   version: 1.x
   css:
     theme:
       css/in-line-form.css: {}
 
+custom:
+  version: 1.x
+  css:
+    theme:
+      css/custom.css: {}

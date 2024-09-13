@@ -1,3 +1,11 @@
+bootstrap_toolbox.create_files:
+  path: '/create-bootstrap-toolbox'
+  defaults:
+    _controller: '\Drupal\bootstrap_toolbox\Controller\FileController::createFiles'
+    _title: 'Create Bootstrap Toolbox Files'
+  requirements:
+    _permission: 'access content'
+    
 bootstrap_toolbox.show_classes:
   path: '/bootstrap-toolbox/show-classes'
   defaults:
@@ -147,3 +155,21 @@ entity.bootstrap_toolbox_scope.delete_form:
     _title: 'Delete a bootstrap toolbox scope'
   requirements:
     _permission: 'administer bootstrap_toolbox_scope'
+
+bootstrap_toolbox.extender:
+  path: 'extender'
+  defaults:
+    _title: 'Extender'
+    _controller: '\Drupal\bootstrap_toolbox\Controller\ExtenderController'
+  requirements:
+    _permission: 'access content'
+  options:
+    query:
+      classes: ''
+      mode: ''
+    bootstrap_toolbox:
+      edge_to_edge: FALSE
+      hide_sidebars: TRUE
+      hide_breadcrumb: TRUE
+      hide_title: FALSE
+      custom_theme: olivero

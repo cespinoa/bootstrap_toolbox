@@ -30,5 +30,3 @@ entity.bootstrap_toolbox_scope.overview:
   parent: bootstrap_toolbox.settings
   description: 'List of bootstrap toolbox scopes to extend site functionality.'
   route_name: entity.bootstrap_toolbox_scope.collection
-
-

@@ -5,35 +5,22 @@
  * Primary module hooks for Bootstrap Toolbox module.
  */
 
-
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\node\NodeTypeInterface;
-use Drupal\node\Entity\NodeType;
-use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\node\NodeInterface;
-
-use Drupal\Core\Template\Attribute;
-
-use Drupal\Core\Field\FormatterInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
-
 use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxScope;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Template\Attribute;
 
-
-
-include_once __DIR__ .'/includes/bootstrap_toolbox.node_types.inc' ;
-include_once __DIR__ .'/includes/bootstrap_toolbox.nodes.inc' ;
-include_once __DIR__ .'/includes/bootstrap_toolbox.blocks.inc' ;
-include_once __DIR__ .'/includes/bootstrap_toolbox.pages.inc' ;
-include_once __DIR__ .'/includes/bootstrap_toolbox.fields.inc' ;
-include_once __DIR__ .'/includes/bootstrap_toolbox.help.inc' ;
-
+include_once __DIR__ . '/includes/bootstrap_toolbox.node_types.inc';
+include_once __DIR__ . '/includes/bootstrap_toolbox.nodes.inc';
+include_once __DIR__ . '/includes/bootstrap_toolbox.blocks.inc';
+include_once __DIR__ . '/includes/bootstrap_toolbox.pages.inc';
+include_once __DIR__ . '/includes/bootstrap_toolbox.fields.inc';
+include_once __DIR__ . '/includes/bootstrap_toolbox.help.inc';
 
 /**
  * Implements hook_ENTITY_TYPE_access() for BootstrapToolboxScope entities.
  */
-function bootstrap_toolbox_bootstrap_toolbox_scope_access(BootstrapToolboxScope $bootstrap_toolbox_scope, $operation, \Drupal\Core\Session\AccountInterface $account) {
+function bootstrap_toolbox_bootstrap_toolbox_scope_access(BootstrapToolboxScope $bootstrap_toolbox_scope, $operation, AccountInterface $account) {
   if ($operation == 'delete' && $bootstrap_toolbox_scope->get('system')) {
     // Negar el acceso si es un scope del sistema.
     return AccessResult::forbidden()->addCacheableDependency($bootstrap_toolbox_scope);
@@ -43,41 +30,36 @@ function bootstrap_toolbox_bootstrap_toolbox_scope_access(BootstrapToolboxScope 
   return AccessResult::neutral();
 }
 
-
-
-
-
-
 /**
  * Implements hook_preprocess_HOOK() for nodes.
  */
 function bootstrap_toolbox_preprocess_node(array &$variables) {
   $node = $variables['node'];
-    foreach ($variables['content'] as $field_name => &$field_content) {
-      if (is_array($field_content) && isset($field_content['#field_name'])) {
-        if (isset($field_content['#third_party_settings']['bootstrap_toolbox']['settings'])) {
+  foreach ($variables['content'] as $field_name => &$field_content) {
+    if (is_array($field_content) && isset($field_content['#field_name'])) {
+      if (isset($field_content['#third_party_settings']['bootstrap_toolbox']['settings'])) {
         $settings = $field_content['#third_party_settings']['bootstrap_toolbox']['settings'];
 
-        if($variables['content'][$field_name]['#items']->count()){
-          $utilityservice = \Drupal::service('bootstrap_toolbox.utility_service');
+        if ($variables['content'][$field_name]['#items']->count()) {
+          $utilityService = \Drupal::service('bootstrap_toolbox.utility_service');
 
           $wrapperId = $settings['wrapper'] ?? 'none';
-          if($wrapperId){
-            $wrapperClasses = $utilityservice->getWrapperById($wrapperId);
+          if ($wrapperId) {
+            $wrapperClasses = $utilityService->getWrapperById($wrapperId);
 
             $wrapperStyleId = $settings['wrapper_style'] ?? 'none';
-            if($wrapperStyleId){
-              $wrapperStyle = $utilityservice->getStyleById($wrapperStyleId);
-              $wrapperClasses = $wrapperClasses . ' ' . $wrapperStyle;  
+            if ($wrapperStyleId) {
+              $wrapperStyle = $utilityService->getStyleById($wrapperStyleId);
+              $wrapperClasses = $wrapperClasses . ' ' . $wrapperStyle;
             }
-            $variables['content'][$field_name]['#prefix'] = '<div class="clearfix  ' . $wrapperClasses  . ' ">';
+            $variables['content'][$field_name]['#prefix'] = '<div class="clearfix  ' . $wrapperClasses . ' ">';
             $variables['content'][$field_name]['#suffix'] = '</div>';
           }
 
           $styleId = $settings['style'] ?? 'none';
-          if($styleId){
-            $style = $utilityservice->getStyleById($styleId) . ' clearfix';
-            $variables['content'][$field_name]['#attributes'] = new \Drupal\Core\Template\Attribute();
+          if ($styleId) {
+            $style = $utilityService->getStyleById($styleId) . ' clearfix';
+            $variables['content'][$field_name]['#attributes'] = new Attribute();
             $variables['content'][$field_name]['#attributes']->addClass($style);
           }
         }
@@ -85,6 +67,3 @@ function bootstrap_toolbox_preprocess_node(array &$variables) {
     }
   }
 }
-
-
-

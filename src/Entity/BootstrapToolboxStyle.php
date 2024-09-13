@@ -7,9 +7,6 @@ namespace Drupal\bootstrap_toolbox\Entity;
 use Drupal\bootstrap_toolbox\BootstrapToolboxStyleInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 
-use Drupal\Core\Render\RendererInterface;
-use Drupal\bootstrap_toolbox\UtilityServiceInterface;
-
 /**
  * Defines the bootstrap toolbox style entity type.
  *
@@ -56,8 +53,6 @@ use Drupal\bootstrap_toolbox\UtilityServiceInterface;
  */
 final class BootstrapToolboxStyle extends ConfigEntityBase implements BootstrapToolboxStyleInterface {
 
-  
-
   /**
    * Style ID.
    */
@@ -74,17 +69,18 @@ final class BootstrapToolboxStyle extends ConfigEntityBase implements BootstrapT
   protected string $description;
 
   /**
-   * Style classes
+   * Style classes.
    */
   protected string $classes;
 
   /**
-   * Style scope
+   * Style scope.
    */
   protected array $scope;
 
   /**
-   * Style description getter
+   * Style description getter.
+   *
    * @return string
    */
   public function getDescription(): string {
@@ -92,39 +88,43 @@ final class BootstrapToolboxStyle extends ConfigEntityBase implements BootstrapT
   }
 
   /**
-   * Style classes getter
+   * Style classes getter.
+   *
    * @return string
    */
   public function getClasses(): string {
-    return  \Drupal::service('bootstrap_toolbox.utility_service')->sanitizeTextField($this->classes);
+    return \Drupal::service('bootstrap_toolbox.utility_service')->sanitizeTextField($this->classes);
   }
 
   /**
-   * Style classes getter as array
+   * Style classes getter as array.
+   *
    * @return array
    */
   public function getClassesAsArray(): array {
     $items = $this->getClasses();
-    return  explode(' ',$items);
-  }  
+    return explode(' ', $items);
+  }
 
   /**
-   * Style classes getter as HTML list
+   * Style classes getter as HTML list.
+   *
    * @return object
    */
-  public function getClassesAsHTMLList(): object {
+  public function getClassesAsHtmlList(): object {
     $items = $this->getClassesAsArray();
-    return  \Drupal::service('bootstrap_toolbox.utility_service')->arrayToHTMLList($items);
-  } 
+    return \Drupal::service('bootstrap_toolbox.utility_service')->arrayToHtmlList($items);
+  }
 
   /**
-   * Style scope getter
+   * Style scope getter.
+   *
    * @return array
    */
   public function getScope(): array {
     $selectedScopes = [];
-    foreach($this->scope as $scope=>$selected){
-      if($selected){
+    foreach ($this->scope as $scope => $selected) {
+      if ($selected) {
         $selectedScopes[] = $selected;
       }
     }
@@ -132,16 +132,17 @@ final class BootstrapToolboxStyle extends ConfigEntityBase implements BootstrapT
   }
 
   /**
-   * Style scope HTML list
+   * Style scope HTML list.
+   *
    * @return object
    */
-  public function getScopeHTMLList(): object {
+  public function getScopeHtmlList(): object {
     $items = $this->getScope();
     $labels = [];
-    foreach($items as $item){
+    foreach ($items as $item) {
       $labels[] = \Drupal::service('bootstrap_toolbox.utility_service')->getScopeLabel($item);
     }
-    return \Drupal::service('bootstrap_toolbox.utility_service')->arrayToHTMLList($labels);
-  }  
+    return \Drupal::service('bootstrap_toolbox.utility_service')->arrayToHtmlList($labels);
+  }
 
 }

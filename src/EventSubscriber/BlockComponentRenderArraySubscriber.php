@@ -5,16 +5,8 @@ namespace Drupal\bootstrap_toolbox\EventSubscriber;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\layout_builder\Event\SectionComponentBuildRenderArrayEvent;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\layout_builder\LayoutBuilderEvents;
-
-
-
-
-use Symfony\Component\EventDispatcher\Event;
-
-
-
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Event subscriber to the initial render array.
@@ -75,11 +67,10 @@ class BlockComponentRenderArraySubscriber implements EventSubscriberInterface {
       return;
     }
     $bootstrapToolboxBlockstyle = $event->getComponent()->get('bootstrap_toolbox_blockstyle');
-    if($bootstrapToolboxBlockstyle){
+    if ($bootstrapToolboxBlockstyle) {
       $build['#bootstrap_toolbox_blockstyle'] = $bootstrapToolboxBlockstyle;
       $event->setBuild($build);
     }
   }
 
 }
-

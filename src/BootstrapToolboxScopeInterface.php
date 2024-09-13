@@ -11,16 +11,16 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
  */
 interface BootstrapToolboxScopeInterface extends ConfigEntityInterface {
 
-  /*
-   * Gets scope description
+  /**
+   * Gets scope description.
    *
    * @return string
    *   The description.
    */
   public function getDescription(): string;
 
-  /*
-   * Gets scope system condition
+  /**
+   * Gets scope system condition.
    *
    * @return bool
    *   The system condition.

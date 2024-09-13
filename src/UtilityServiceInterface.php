@@ -2,14 +2,17 @@
 
 namespace Drupal\bootstrap_toolbox;
 
+/**
+ *
+ */
 interface UtilityServiceInterface {
 
   /**
-   * Get the scope label
+   * Get the scope label.
    *
    * @param string $id
+   *
    * @return string
-   *   
    */
   public function getScopeLabel($id): string;
 
@@ -19,7 +22,7 @@ interface UtilityServiceInterface {
    * @return array
    *   An array of known themes.
    */
-  public function getKnownThemes();
+  public function getKnownThemes(): array;
 
   /**
    * Get active theme selectors.
@@ -30,7 +33,7 @@ interface UtilityServiceInterface {
    * @return array
    *   An array of theme selectors.
    */
-  public function getThemeSelectors($theme);
+  public function getThemeSelectors($theme): array;
 
   /**
    * Get a list with Wrapper entities.
@@ -38,7 +41,7 @@ interface UtilityServiceInterface {
    * @return array
    *   An array of Wrapper entities.
    */
-  public function getWrapperList();
+  public function getWrapperList(): array;
 
   /**
    * Load a bootstrap_toolbox_wrapper entity by label.
@@ -51,62 +54,16 @@ interface UtilityServiceInterface {
    */
   public function getWrapperByLabel($label);
 
-  //~ /**
-   //~ * Get a list with Classes groups entities.
-   //~ *
-   //~ * @return array
-   //~ *   
-   //~ */
-  //~ function getClassesGroupList();
-
   /**
    * Load a bootstrap_toolbox_wrapper entity by id.
    *
    * @param string $id
    *   The id of the entity.
    *
-   * @return string
-   *   The description of the entity or NULL if not found.
+   * @return string|null
+   *   The description of entity, or NULL if not found.
    */
-  public function getWrapperById($id);
-
-  //~ /**
-   //~ * Load a bootstrap_toolbox_classes entity by id.
-   //~ *
-   //~ * @param string $id
-   //~ *   The id of the entity.
-   //~ *
-   //~ * @return string
-   //~ *   The description of the entity or NULL if not found.
-   //~ */
-  //~ public function loadClassesById($id);
-
-
-
-
-  //~ /**
-   //~ * Load bootstrap_toolbox_classes entities by classes_group.
-   //~ *
-   //~ * @param array $classes_group
-   //~ *   The classes_group of the entities.
-   //~ *
-   //~ * @return array
-   //~ *   The classes with this classes_group or NULL if not found.
-   //~ */
-  //~ public function loadClassesByClassesGroup(array $classes_group): array;
-
-
-  //~ /**
-   //~ * Load a bootstrap_toolbox_classes_group by  id.
-   //~ *
-   //~ * @param string $id
-   //~ *   The id of the entity.
-   //~ *
-   //~ * @return object
-   //~ *   The description of entity, or NULL if not found.
-   //~ */
-  //~ public function loadClassesGroupById($id): object;
-
+  public function getWrapperById($id): ?string;
 
   /**
    * Filter non-zero values from an array.
@@ -190,7 +147,7 @@ interface UtilityServiceInterface {
   /**
    * Get image styles.
    *
-   * @return array $imageStyles
+   * @return array
    *   The image styles array.
    */
   public function getImageStyles(): array;
@@ -203,8 +160,8 @@ interface UtilityServiceInterface {
    * @param string $targetType
    * @param bool $includeFullMode
    * @param array $includeFieldsMode
-   * 
-   * @return array $viewModes
+   *
+   * @return array
    *   The view modes array.
    */
   public function getViewModes(string $targetType, bool $includeFullMode = FALSE, array $includeFieldsMode = []): array;
@@ -216,83 +173,71 @@ interface UtilityServiceInterface {
    * @param string $entity
    * @param string $bundle
    * @param array $types
-   * 
-   * @return array $fieldsList
-   * */
-  public function getBundleFields(string $entity, string $bundle, array $types = NULL ): array;
-
-  /**
-   * Get entity render array
-   *
-   * @param string $entityType
-   * @param string $viewMode
-   * @param string $entityId
-   *
-   * @return object
-   * */
-  public function getEntityRenderArray(string $entityType,string $viewMode, string $entityId): array;
-
-  /**
-   * Get rendered entity
-   *
-   * @param string $entityType
-   * @param string $viewMode
-   * @param string $entityId
-   *
-   * @return object
-   * */
-  public function getRenderedEntity(string $entityType,string $viewMode, string $entityId): object;
-
-  /**
-   * Provide tags styles
    *
    * @return array
-   * */
-  public function getTagStyles(): array;
-
-    /**
-   * Get media uri by mediaId and imageStyle
-   *
-   * @param string mediaId $mediaId
-   * @param string imageStyle
-   *
-   * @return string
-   * */
-  public function getMediaUriByMediaIdAndImageStyle(string $mediaId, string $imageStyle): string;
+   */
+  public function getBundleFields(string $entity, string $bundle, array $types = NULL): array;
 
   /**
-   * Get media uri by mediaId and imageStyle
+   * Get entity render array.
    *
-   * @param string mediaId $mediaId
-   * @param string imageStyle
+   * @param string $entityType
+   * @param string $viewMode
+   * @param string $entityId
    *
-   * @return string
-   * */
-  public function getMediaUrlByMediaIdAndImageStyle(string $mediaId, string $imageStyle): string;
+   * @return array
+   */
+  public function getEntityRenderArray(string $entityType, string $viewMode, string $entityId): array;
 
   /**
-   * Returns markup from text
+   * Get rendered entity.
    *
-   * @param strint $text
+   * @param string $entityType
+   * @param string $viewMode
+   * @param string $entityId
    *
    * @return object
-   * */
+   */
+  public function getRenderedEntity(string $entityType, string $viewMode, string $entityId): object;
 
   /**
-   * Get media file data by mediaId and imageStyle
+   * Provide tags styles.
+   *
+   * @return array
+   */
+  public function getTagStyles(): array;
+
+  /**
+   * Get media uri by mediaId and imageStyle.
    *
    * @param string $mediaId
    * @param string $imageStyle
    *
-   * @return array
-   * */
-  public function getMediaFileDataByMediaIdAndImageStyle(string $mediaId, string $imageStyle): array;
+   * @return string
+   */
+  public function getMediaUriByMediaIdAndImageStyle(string $mediaId, string $imageStyle): string;
 
-  
-  public function createMarkup($text):object;
+  /**
+   * Get media uri by mediaId and imageStyle.
+   *
+   * @param string $mediaId
+   * @param string $imageStyle
+   *
+   * @return string
+   */
+  public function getMediaUrlByMediaIdAndImageStyle(string $mediaId, string $imageStyle): string;
 
- /**
-   * Get entities by entity Type and bundle
+  /**
+   * Returns markup from text.
+   *
+   * @param string $text
+   *
+   * @return object
+   */
+  public function createMarkup(string $text): object;
+
+  /**
+   * Get entities by entity Type and bundle.
    *
    * @param string $entityType
    * @param string $bundle
@@ -301,16 +246,32 @@ interface UtilityServiceInterface {
    *
    * @return array
    */
-  public function getEntitiesByTypeAndBundle($entityType, $bundle, $sortField = NULL, $direction = 'asc'): array;
+  public function getEntitiesByTypeAndBundle(string $entityType, string $bundle, string $sortField = NULL, string $direction = 'asc'): array;
 
   /**
-   * Get an entity by entity Type and uuid
+   * Get an entity by entity Type and uuid.
    *
    * @param string $entityType
    * @param string $uuid
    *
-   * return object
+   * @return array
+   */
+  public function getEntityByTypeAndUuid(string $entityType, string $uuid): array;
+
+  /**
+   * Check if the parameter $url is the current url.
+   *
+   * @param string $url
+   *
+   * @return bool
+   */
+  public function isCurrentUrl(string $url): bool;
+
+  /**
+   * Return an array with available custom themes
+   *
+   * @return array
    * */
-  public function getEntityByTypeAndUuid($entityType, $uuid):array;
-  
+  function getAllowedThemes(): array;
+
 }

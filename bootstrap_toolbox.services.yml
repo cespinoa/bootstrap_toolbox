@@ -8,6 +8,8 @@ services:
       - '@entity_display.repository'
       - '@entity_field.manager'
       - '@file_url_generator'
+      - '@theme_handler'
+      - '@path.matcher'
 
   bootstrap_toolbox.render_block_component_subscriber:
     class: Drupal\bootstrap_toolbox\EventSubscriber\BlockComponentRenderArraySubscriber
@@ -15,4 +17,8 @@ services:
     tags:
     - { name: event_subscriber }
 
-
+  bootstrap_toolbox.bootstrap_toolbox_theme_negotiator:
+    class: Drupal\bootstrap_toolbox\Theme\BootstrapToolboxThemeNegotiator
+    arguments: ['@bootstrap_toolbox.utility_service']
+    tags:
+      - { name: theme_negotiator, priority: 10 }

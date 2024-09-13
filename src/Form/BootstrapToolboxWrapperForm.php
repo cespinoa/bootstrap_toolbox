@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\bootstrap_toolbox\Form;
 
+use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxWrapper;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxWrapper;
 
 /**
  * BootstrapToolboxWrapper form.
@@ -16,9 +16,9 @@ final class BootstrapToolboxWrapperForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $formstate): array {
+  public function form(array $form, FormStateInterface $form_state): array {
 
-    $form = parent::form($form, $formstate);
+    $form = parent::form($form, $form_state);
 
     $form['label'] = [
       '#type' => 'textfield',
@@ -50,8 +50,8 @@ final class BootstrapToolboxWrapperForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $formstate): int {
-    $result = parent::save($form, $formstate);
+  public function save(array $form, FormStateInterface $form_state): int {
+    $result = parent::save($form, $form_state);
     $messageArgs = ['%label' => $this->entity->label()];
     $this->messenger()->addStatus(
       match($result) {
@@ -59,7 +59,7 @@ final class BootstrapToolboxWrapperForm extends EntityForm {
         \SAVED_UPDATED => $this->t('Updated wrapper %label.', $messageArgs),
       }
     );
-    $formstate->setRedirectUrl($this->entity->toUrl('collection'));
+    $form_state->setRedirectUrl($this->entity->toUrl('collection'));
     return $result;
   }
 

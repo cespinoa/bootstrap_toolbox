@@ -22,5 +22,3 @@ entity.bootstrap_toolbox_scope.collection:
   route_name: entity.bootstrap_toolbox_scope.collection
   title: 'Scopes'
   base_route: bootstrap_toolbox.settings
-
-
