@@ -1,1 +1,5 @@
-@import url('/sites/default/files/bootstrap_toolbox/custom.css')
+
+img {
+  max-width: 100%!important;
+  height: auto!important;
+}

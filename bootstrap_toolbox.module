@@ -9,6 +9,7 @@ use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxScope;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Template\Attribute;
+use Drupal\bootstrap_toolbox\UtilityServiceInterface;
 
 include_once __DIR__ . '/includes/bootstrap_toolbox.node_types.inc';
 include_once __DIR__ . '/includes/bootstrap_toolbox.nodes.inc';
@@ -16,6 +17,44 @@ include_once __DIR__ . '/includes/bootstrap_toolbox.blocks.inc';
 include_once __DIR__ . '/includes/bootstrap_toolbox.pages.inc';
 include_once __DIR__ . '/includes/bootstrap_toolbox.fields.inc';
 include_once __DIR__ . '/includes/bootstrap_toolbox.help.inc';
+
+/**
+ * Implements hook_form_system_theme_settings_alter
+ */
+function bootstrap_toolbox_form_system_theme_settings_alter(&$form, $form_state, $form_id = NULL){
+  $theme = $form_state->getBuildInfo()['args'][0];
+  $utilityService = \Drupal::service('bootstrap_toolbox.utility_service');
+
+  $config = \Drupal::configFactory()->get("{$theme}.settings");
+  $baseTheme = NULL;
+  $third_party_settings = $config->get('third_party_settings') ?? NULL;
+  if (isset($third_party_settings['bootstrap_toolbox']['base_theme'])) {
+    $baseTheme = $third_party_settings['bootstrap_toolbox']['base_theme'];
+  } 
+
+  
+  $form['third_party_settings']['bootstrap_toolbox'] = [
+    '#type' => 'details',
+    '#title' => t('Bootstrap Toolbox settings'),
+  ];
+  $form['third_party_settings']['bootstrap_toolbox']['base_theme'] = [
+    '#type' => 'select',
+    '#title' => t('Behavior settings'),
+    '#options' => $utilityService->getBaseThemes(),
+    '#empty_option' => t('None'),
+    '#default_value' => $baseTheme,
+  ];
+
+  $form['#submit'][] = 'bootstrap_toolbox_theme_settings_submit';
+  
+}
+
+function bootstrap_toolbox_theme_settings_submit($form, \Drupal\Core\Form\FormStateInterface $form_state){
+  $theme = $form_state->getBuildInfo()['args'][0];
+  \Drupal::configFactory()->getEditable("{$theme}.settings")
+      ->set('third_party_settings.bootstrap_toolbox.base_theme', $form_state->getValue('base_theme'))
+      ->save(TRUE);
+}
 
 /**
  * Implements hook_ENTITY_TYPE_access() for BootstrapToolboxScope entities.
@@ -66,4 +105,243 @@ function bootstrap_toolbox_preprocess_node(array &$variables) {
       }
     }
   }
+}
+
+
+
+
+/**
+ * Update the known themes configuration.
+ */
+function bootstrap_toolbox_update_8001() {
+  // Cargar la configuración actual.
+  $config = \Drupal::service('config.factory')->getEditable('bootstrap_toolbox.known_themes');
+
+  // Actualizar los valores.
+  $knownthemes = [
+    'bootstrap_barrio' => [
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '#main',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+    'bootstrap5' => [
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '.dialog-off-canvas-main-canvas main div',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+    'bootstrap3' => [
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '.main-container',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+  ];
+
+  // Establecer la nueva configuración.
+  $config->set('known_themes', $knownthemes)->save();
+}
+
+
+/**
+ * Update the known themes configuration.
+ */
+function bootstrap_toolbox_update_8002() {
+  // Cargar la configuración actual.
+  $config = \Drupal::service('config.factory')->getEditable('bootstrap_toolbox.known_themes');
+
+  // Actualizar los valores.
+  $knownthemes = [
+    'bootstrap_barrio' => [
+    'name' => 'Bootstrap Barrio base theme',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '#main',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+    'bootstrap5' => [
+      'name' => 'Bootstrap 5',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '.dialog-off-canvas-main-canvas main div',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+    'bootstrap3' => [
+      'name' => 'Bootstrap 3 for Drupal',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '.main-container',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+  ];
+
+  // Establecer la nueva configuración.
+  $config->set('known_themes', $knownthemes)->save();
+}
+
+/**
+ * Update the known themes configuration.
+ */
+function bootstrap_toolbox_update_8003() {
+  // Cargar la configuración actual.
+  $config = \Drupal::service('config.factory')->getEditable('bootstrap_toolbox.known_themes');
+
+  // Actualizar los valores.
+  $knownthemes = [
+    'bootstrap_barrio' => [
+    'name' => 'Bootstrap Barrio base theme',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '#main',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+    'bootstrap5' => [
+      'name' => 'Bootstrap 5',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '.dialog-off-canvas-main-canvas main div',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+    'bootstrap' => [
+      'name' => 'Bootstrap 3 for Drupal',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '.main-container',
+      'main_area_class' => 'container-fluid',
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+    ],
+  ];
+
+  // Establecer la nueva configuración.
+  $config->set('known_themes', $knownthemes)->save();
+}
+
+
+/**
+ * Update the known themes configuration.
+ */
+function bootstrap_toolbox_update_8004() {
+  // Cargar la configuración actual.
+  $config = \Drupal::service('config.factory')->getEditable('bootstrap_toolbox.known_themes');
+
+  // Actualizar los valores.
+  $knownthemes = [
+    'bootstrap_barrio' => [
+    'name' => 'Bootstrap Barrio base theme',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '#main',
+      'main_area_class' => 'container-fluid',
+      'bootstrap_version' => 5,
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+      'toc_selector' => 'aside',
+      'sticky_class' => 'sticky-top',
+    ],
+    'bootstrap5' => [
+      'name' => 'Bootstrap 5',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '.dialog-off-canvas-main-canvas main div',
+      'main_area_class' => 'container-fluid',
+      'bootstrap_version' => 5,
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+      'toc_selector' => '.region',
+      'sticky_class' => 'sticky-top',
+    ],
+    'bootstrap' => [
+      'name' => 'Bootstrap 3 for Drupal',
+      'sidebars_variables' => [
+        'sidebar_first',
+        'sidebar_second',
+      ],
+      'main_area_selector' => '.main-container',
+      'main_area_class' => 'container-fluid',
+      'bootstrap_version' => 3,
+      'central_panel_class' => 'container',
+      'edit_mode_fields_area' => '.layout-region-node-main',
+      'edit_mode_advanced_area' => '.layout-region-node-secondary',
+      'edit_mode_fields_area_remove_class' => 'col-md-6',
+      'edit_mode_advanced_area_remove_class' => 'col-md-6',
+      'toc_selector' => '.region',
+      'sticky_class' => 'affix',
+    ],
+  ];
+
+  // Establecer la nueva configuración.
+  $config->set('known_themes', $knownthemes)->save();
 }

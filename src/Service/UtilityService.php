@@ -21,11 +21,44 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Path\PathMatcher;
 
+use Symfony\Component\Yaml\Yaml;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Component\Utility\Html;
+use Symfony\Component\HttpFoundation\RequestStack;
+
+use Drupal\Core\Link;
+use Drupal\Core\Url;
+
+use Psr\Log\LoggerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Field\FieldItemInterface;
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\file\Entity\File;
+
+use Drupal\Core\Entity\EntityInterface;
+
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
+
 /**
  *
  */
 class UtilityService implements UtilityServiceInterface {
 
+   use StringTranslationTrait;
+
+  /**
+   * The RequestStack service
+   *
+   *@var \Symfony\Component\HttpFoundation\RequestStack
+   * */
+   protected $requestStack;
+  
   /**
    * The entity type manager.
    *
@@ -57,28 +90,28 @@ class UtilityService implements UtilityServiceInterface {
   /**
    * The eentity field manager.
    *
-   * @var Drupal\Core\Entity\EntityFieldManagerInterface
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldManager;
 
   /**
    * Markup service
    *
-   * @var Drupal\Core\Render\Markup
+   * @var \Drupal\Core\Render\Markup
    * */
   protected $markupService;
 
   /**
    * El servicio de File URL Generator.
    *
-   * @var \Drupal\Core\File\FileUrlGenerator
+   * @var \Drupal\Core\File\FileUrlGeneratorInterface
    */
   protected $fileUrlGenerator;
 
   /**
    * Theme handler service
    *
-   * @var Drupal\Core\Extension\ThemeHandlerInterface
+   * @var \Drupal\Core\Extension\ThemeHandlerInterface
    * */
    protected $themeHandler;
 
@@ -88,6 +121,57 @@ class UtilityService implements UtilityServiceInterface {
    * @var \Drupal\Core\Path\PathMatcher
    */
   protected $pathMatcher;
+
+  /**
+   * The file system service.
+   *
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  /**
+   * El servicio de logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * The routeMatch service.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
+   * The theme manager service.
+   *
+   * @var \Drupal\Core\Theme\ThemeManagerInterface
+   */
+  protected $themeManager;
+
+  /**
+   * The translation service.
+   *
+   * @var \Drupal\Core\StringTranslation\TranslationInterface
+   */
+  protected $stringTranslation;
+
+  
 
   /**
    * Constructs a new UtilityService object.
@@ -100,14 +184,30 @@ class UtilityService implements UtilityServiceInterface {
    *   The render service.
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entityDisplayRepository
    *   The entity display repository.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
-   *   The entity field manager.
-   * @param \Drupal\Core\File\FileUrlGeneratorInterface $FileUrlGeneratorInterface
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+*   El administrador de campos de entidad.
+   * @param \Drupal\Core\File\FileUrlGeneratorInterface $fileUrlGenerator
    *   El generador de URLs para archivos.
    * @param \Drupal\Core\Extension\ThemeHandlerInterface $themeHandler
    *   ThemeHandler service
    * @param \Drupal\Core\Path\PathMatcher $pathMatcher
    *   The path matcher service
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack service
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger
+   *   The logger service
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler service.
+   * @param \Drupal\Core\File\FileSystemInterface $file_system
+   *   The file system service.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
+   *   The route match service
+   * @param \Drupal\Core\Theme\ThemeManagerInterface $theme_manager
+   *   The theme manager service.
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $stringTranslation
+   *   The translation service.
    */
   public function __construct(
     EntityTypeManagerInterface $entityTypeManager,
@@ -117,7 +217,15 @@ class UtilityService implements UtilityServiceInterface {
     EntityFieldManagerInterface $entity_field_manager,
     FileUrlGeneratorInterface $fileUrlGenerator,
     ThemeHandlerInterface $themeHandler,
-    PathMatcher $pathMatcher
+    PathMatcher $pathMatcher,
+    RequestStack $requestStack,
+    LoggerChannelFactoryInterface $logger,
+    MessengerInterface $messenger,
+    ModuleHandlerInterface $moduleHandler,
+    FileSystemInterface $file_system,
+    RouteMatchInterface $routeMatch,
+    ThemeManagerInterface $theme_manager,
+    TranslationInterface $stringTranslation
   ) {
     $this->entityTypeManager = $entityTypeManager;
     $this->configFactory = $configFactory;
@@ -127,6 +235,14 @@ class UtilityService implements UtilityServiceInterface {
     $this->fileUrlGenerator = $fileUrlGenerator;
     $this->themeHandler = $themeHandler;
     $this->pathMatcher = $pathMatcher;
+    $this->requestStack = $requestStack;
+    $this->logger = $logger->get('bootstrap_toolbox');
+    $this->messenger = $messenger;
+    $this->moduleHandler = $moduleHandler;
+    $this->fileSystem = $file_system;
+    $this->routeMatch = $routeMatch;
+    $this->themeManager = $theme_manager;
+    $this->stringTranslation = $stringTranslation;
   }
 
   /**
@@ -136,31 +252,35 @@ class UtilityService implements UtilityServiceInterface {
    *
    * @return array
    */
-  public function getKnownThemes():array {
-    return [
-      'custom'  => 'Custom selectors',
-      'bootstrap_barrio'  => 'Bootstrap Barrio base theme',
-      'bootstrap5'  => 'Bootstrap5',
-      'bootstrap3'  => 'Bootstrap 3 for Drupal',
-    ];
-  }
-
-  /**
-   * Get active theme selectors .
-   *
-   * Bootstrap Toolbox needs to know there classes to hide sidebars and configure edge-to-edge mode.
-   *
-   * @ return array
-   */
+  //~ public function getKnownThemes():array {
+    //~ kint('lola');
+    //~ $config = \Drupal::config('bootstrap_toolbox.known_themes');
+    //~ $configKnownThemes = $config->get('known_themes');
+    //~ $themes['custom'] = 'Custom selectors';
+    //~ foreach($configKnownThemes as $themeId => $themeData){
+      //~ $themes[$themeId] = $themeData['name'];
+    //~ }
+    //~ $publicPath = \Drupal::service('file_system')->realpath('public://');
+    //~ $filePath = $publicPath . '/bootstrap_toolbox/theme_data.yml';
+    //~ $customKnownThemes = Yaml::parse(file_get_contents($filePath))['knownthemes'];
+    //~ foreach($customKnownThemes as $themeId => $themeData){
+      //~ $themes[$themeId] = $themeData['name'];
+    //~ }
+    
+    //~ return $themes;
+  //~ }
 
   /**
    * Get style by id.
    *
    * @param string $id
+   *  The style id
    *
    * @return string
+   *  The classes associated to style
    */
   public function getStyleById(string $id): string {
+    /** @var \Drupal\bootstrap_toolbox\BootstrapToolboxStyleInterface|null $style */
     $style = $this->entityTypeManager->getStorage('bootstrap_toolbox_style')->load($id);
     if ($style) {
       return $style->getClasses();
@@ -179,6 +299,7 @@ class UtilityService implements UtilityServiceInterface {
     $storage = $this->entityTypeManager->getStorage('bootstrap_toolbox_style');
     $query = $storage->getQuery();
     $query->sort('label');
+    $query->accessCheck(TRUE);
     $entityIds = $query->execute();
 
     // Load entities and filter manually.
@@ -187,9 +308,11 @@ class UtilityService implements UtilityServiceInterface {
     if (!empty($scope) && !$scope[0] == NULL) {
       $filteredentities = [];
       foreach ($entities as $id => $entity) {
-        $result = array_intersect($scope, $entity->getScope()) ? TRUE : FALSE;
-        if ($result) {
-          $filteredentities[$id] = $entity;
+        if ($entity instanceof \Drupal\bootstrap_toolbox\BootstrapToolboxStyleInterface) {
+          $result = array_intersect($scope, $entity->getScope()) ? TRUE : FALSE;
+          if ($result) {
+            $filteredentities[$id] = $entity;
+          }
         }
       }
       return $filteredentities;
@@ -197,14 +320,16 @@ class UtilityService implements UtilityServiceInterface {
     return $entities;
   }
 
+
   /**
    * Get array list with styles filtered by scope.
    *
-   * @param array @scope
+   * @param array $scope
    *
    * @return array
    */
-  public function getScopeListFiltered(array $scope) {
+  public function getScopeListFiltered(array $scope): array {
+    $styleList = [];
     foreach ($this->getStyleByScope($scope) as $id => $scope) {
       $styleList[$id] = $scope->label();
     }
@@ -214,11 +339,12 @@ class UtilityService implements UtilityServiceInterface {
   /**
    * Get array list with styles filtered by scope.
    *
-   * @param array @scope
+   * @param array $scope
    *
    * @return array
    */
-  public function getScopeClassesListFiltered(array $scope) {
+  public function getScopeClassesListFiltered(array $scope): array {
+    $styleList = [];
     foreach ($this->getStyleByScope($scope) as $id => $scope) {
       $styleList[$id] = $scope->getClasses();
     }
@@ -230,7 +356,7 @@ class UtilityService implements UtilityServiceInterface {
    *
    * @return array
    */
-  public function getScopeList() {
+  public function getScopeList(): array {
     $scopes = [];
     foreach ($this->entityTypeManager->getStorage('bootstrap_toolbox_scope')->loadMultiple() as $id => $scope) {
       $scopes[$id] = $scope->label();
@@ -247,29 +373,46 @@ class UtilityService implements UtilityServiceInterface {
    * @return string
    */
   public function getScopeLabel($id): string {
-    return $this->entityTypeManager->getStorage('bootstrap_toolbox_scope')->load($id)->label();
+    /** @var \Drupal\bootstrap_toolbox\BootstrapToolboxScopeInterface|null $scope */
+    $scope = $this->entityTypeManager->getStorage('bootstrap_toolbox_scope')->load($id);
+    
+    if ($scope instanceof \Drupal\bootstrap_toolbox\BootstrapToolboxScopeInterface) {
+      $label = $scope->label();
+
+      // Si es un objeto TranslatableMarkup, convertirlo a string.
+      if ($label instanceof \Drupal\Core\StringTranslation\TranslatableMarkup) {
+        return $label->__toString();
+      }
+
+      // Si ya es una cadena, devolverla directamente.
+      if (is_string($label)) {
+        return $label;
+      }
+    }
+
+    // Devuelve una cadena vacía si no se encuentra la entidad o no tiene label.
+    return '';
   }
+
+
 
   /**
    * Get html list from array.
    *
    * @param array $items
    *
-   * @return object
+   * @return object|string|null
    */
-  public function arrayToHtmlList($items): object {
-    // ~ $items_labels = [];
-    // ~ foreach($items as $item){
-    // ~ $items_labels[] = \Drupal::service('bootstrap_toolbox.utility_service')->getScopeLabel($item);
-    // ~ }
-    $renderer = \Drupal::service('renderer');
+  public function arrayToHtmlList(array $items): object|string|null {
     $list = [
       '#theme' => 'item_list',
       '#items' => $items,
     ];
-    $list = $renderer->render($list);
-    return $list;
+    
+    $renderedList = $this->renderArray($list);
+    return $renderedList;
   }
+
 
   /**
    * Sanitize text field. Remove carriage return and extra spaces.
@@ -279,34 +422,67 @@ class UtilityService implements UtilityServiceInterface {
    * @return string
    */
   public function sanitizeTextField($strValue): string {
+    if (!is_string($strValue)) {
+        return $strValue;
+    }
     $strValue = str_replace(["\r\n", "\n"], ' ', $strValue);
     $strValue = preg_replace('/\s+/', ' ', $strValue);
-    $strValue = trim($strValue);
+    $strValue = trim($strValue ?? '');
     return $strValue;
   }
 
-  /**
-   *
-   */
-  public function getThemeSelectors($theme = ''): array {
-    $knownthemes = [
-      'bootstrap_barrio' => [
-        'sidebars_variables' => [
-          'sidebar_fisrt',
-          'sidebar_second',
-        ],
-        'main_area_selector' => '#main',
-        'main_area_class' => 'container-fluid',
-        'central_panel_class' => 'container',
-        'edit_mode_fields_area' => '.layout-region-node-main',
-        'edit_mode_advanced_area' => '.layout-region-node-secondary',
-        'edit_mode_fields_area_remove_class' => 'col-md-6',
-        'edit_mode_advanced_area_remove_class' => 'col-md-6',
-      ],
-    ];
 
-    return $knownthemes[$theme];
+  /**
+   * Returns selectors and variables needed to change the behavior of the theme
+   *
+   * @params string $theme
+   *
+   * @returns array|null
+   */
+  public function getThemeSelectors($theme = ''): ?array {
+    if ($theme) {
+      $config = $this->configFactory->get('bootstrap_toolbox.known_themes');
+      $knownThemes = $config->get('known_themes');
+      $publicPath = $this->realpath('public://');
+      
+      $filePath = $publicPath . '/bootstrap_toolbox/theme_data.yml';
+      $content = file_get_contents($filePath);
+      if ($content){
+        $content = Yaml::parse($content);
+        $customKnownThemes = $content['knownthemes'];
+        if($customKnownThemes){
+          $knownThemes = array_merge($knownThemes, $customKnownThemes);
+        }
+      }
+      return $knownThemes[$theme];  
+    }
+    return NULL;
   }
+
+  /**
+   * Returns base themes
+   *
+   * @returns array|null
+   */
+  public function getBaseThemes(): array {
+    $config = $this->configFactory->get('bootstrap_toolbox.known_themes');
+    $knownThemes = [];
+    foreach ($config->get('known_themes') as $theme=>$data){
+      $knownThemes[$theme] = $data['name'];
+    }
+    $publicPath = $this->realpath('public://');
+    $filePath = $publicPath . '/bootstrap_toolbox/theme_data.yml';
+    $content = file_get_contents($filePath);
+    if ($content){
+      $content = Yaml::parse($content);
+      $customKnownThemes = $content['knownthemes'];
+      foreach($customKnownThemes as $themeId => $themeData){
+        $knownThemes[$themeId] = $themeData['name'];
+      }      
+    }
+    return $knownThemes;  
+  }
+  
 
   /**
    * Get a list with Wrapper entities.
@@ -314,6 +490,7 @@ class UtilityService implements UtilityServiceInterface {
    * @return array
    */
   public function getWrapperList(): array {
+    $wrappers = [];
     foreach ($this->entityTypeManager->getStorage('bootstrap_toolbox_wrapper')->loadMultiple() as $key => $wrapper) {
       $wrappers[$key] = $wrapper->label();
     }
@@ -329,24 +506,25 @@ class UtilityService implements UtilityServiceInterface {
    * @return \Drupal\bootstrap_toolbox\Entity\BootstrapToolboxWrapper|null
    *   The loaded entity, or NULL if not found.
    */
-  public function getWrapperByLabel($label) {
+  //~ public function getWrapperByLabel($label) {
 
-    // Create an entity query to find the entity by label.
-    $query = \Drupal::entityQuery('bootstrap_toolbox_wrapper')
-      ->condition('id', $label)
-      ->range(0, 1);
+    //~ // Create an entity query to find the entity by label.
+    
+    //~ $query = \Drupal::entityQuery('bootstrap_toolbox_wrapper')
+      //~ ->condition('id', $label)
+      //~ ->range(0, 1);
 
-    $ids = $query->execute();
-    // If an ID is found, load and return the entity.
-    if ($ids) {
-      $id = reset($ids);
-      $wrapperEntity = $this->entityTypeManager->getStorage('bootstrap_toolbox_wrapper')->load($id);
-      return $wrapperEntity->get('description');
-    }
+    //~ $ids = $query->execute();
+    //~ // If an ID is found, load and return the entity.
+    //~ if ($ids) {
+      //~ $id = reset($ids);
+      //~ $wrapperEntity = $this->entityTypeManager->getStorage('bootstrap_toolbox_wrapper')->load($id);
+      //~ return $wrapperEntity->get('description');
+    //~ }
 
-    // Return NULL if no matching entity was found.
-    return NULL;
-  }
+    //~ // Return NULL if no matching entity was found.
+    //~ return NULL;
+  //~ }
 
   /**
    * Load a bootstrap_toolbox_wrapper entity by id.
@@ -358,7 +536,7 @@ class UtilityService implements UtilityServiceInterface {
    *   The description of entity, or NULL if not found.
    */
   public function getWrapperById($id): ?string {
-
+    /** @var \Drupal\bootstrap_toolbox\BootstrapToolboxWrapperInterface|null $wrapperEntity */
     $wrapperEntity = $this->entityTypeManager->getStorage('bootstrap_toolbox_wrapper')->load($id);
     if ($wrapperEntity) {
       $description = $wrapperEntity->get('description');
@@ -436,10 +614,8 @@ class UtilityService implements UtilityServiceInterface {
    *   The entity type.
    * @param array $types
    *   The types to list.
-   * @param string $message
-   *   The message to display.
-   * @param string $additional_message
-   *   The additional message to display.
+   * @param string $action
+   *   The action to execute
    *
    * @return string
    *   The built description list.
@@ -512,7 +688,6 @@ class UtilityService implements UtilityServiceInterface {
           'field_name' => $fieldname,
           'entity_type' => $entityType,
           'type' => $fieldType,
-          'settings' => [],
           'cardinality' => 1,
           'settings' => [
             'allowed_values' => [],
@@ -557,7 +732,8 @@ class UtilityService implements UtilityServiceInterface {
       ]);
     }
     if ($fieldType === 'list_string') {
-      $options = \Drupal::config('bootstrap_toolbox.settings')->get('selected_themes');
+      $config = $this->configFactory->get('bootstrap_toolbox.settings');
+      $options = $config->get('selected_themes');
       $formDisplay->setComponent($fieldname, [
         'type' => 'options_select',
         'weight' => 0,
@@ -644,7 +820,7 @@ class UtilityService implements UtilityServiceInterface {
     $viewModes = $this->entityDisplayRepository->getViewModes($targetType);
     $viewModeOptions = [];
     if ($includeFullMode) {
-      $viewModeOptions['default'] = t('Default');
+      $viewModeOptions['default'] = $this->t('Default');
     }
 
     foreach ($viewModes as $viewMode => $info) {
@@ -698,18 +874,18 @@ class UtilityService implements UtilityServiceInterface {
    * @param string $viewMode
    * @param string $entityId
    *
-   * @return object
-   * */
+   * @return array
+   *   Render array of the entity.
+   */
   public function getEntityRenderArray(string $entityType, string $viewMode, string $entityId): array {
-    $entity = $this->entityTypeManager->getStorage($entityType)->load($entityId);
-    $renderArray = $this->entityTypeManager->getViewBuilder($entityType)->view($entity, $viewMode);
-    if ($renderArray) {
-      return $renderArray;
-    }
-    else {
-      return NULL;
-    }
+      $entity = $this->entityTypeManager->getStorage($entityType)->load($entityId);
+      if ($entity instanceof \Drupal\Core\Entity\EntityInterface) {
+          $renderArray = $this->entityTypeManager->getViewBuilder($entityType)->view($entity, $viewMode);
+          return $renderArray;
+      }
+      return [];
   }
+
 
   /**
    * Get rendered entity.
@@ -718,12 +894,12 @@ class UtilityService implements UtilityServiceInterface {
    * @param string $viewMode
    * @param string $entityId
    *
-   * @return object
-   * */
-  public function getRenderedEntity(string $entityType, string $viewMode, string $entityId): object {
+   * @return object|string|null
+   */
+  public function getRenderedEntity(string $entityType, string $viewMode, string $entityId): object|string|null {
     $renderArray = $this->getEntityRenderArray($entityType, $viewMode, $entityId);
     if ($renderArray) {
-      return \Drupal::service('renderer')->render($renderArray);
+      return $this->renderArray($renderArray);
       ;
     }
     else {
@@ -748,55 +924,107 @@ class UtilityService implements UtilityServiceInterface {
     ];
   }
 
+
   /**
    * Get media uri by mediaId and imageStyle.
    *
-   * @param string mediaId $mediaId
-   * @param string imageStyle
+   * @param string $mediaId
+   * @param string $imageStyle
    *
    * @return string
-   * */
+   *   The media URI or an empty string if not found.
+   */
   public function getMediaUriByMediaIdAndImageStyle(string $mediaId, string $imageStyle): string {
-    $media = Media::load($mediaId);
-    $mediaFieldName = $media->getSource()->getConfiguration()['source_field'];
-    $imageField = $media->get($mediaFieldName);
-    if (!$imageField->isEmpty()) {
-      if ($imageStyle != 'default') {
-        return ImageStyle::load($imageStyle)->buildUri($imageField->entity->getFileUri());
-      }
-      else {
-        return $imageField->first()->entity->uri->value;
+      $media = Media::load($mediaId);
+      if (!$media) {
+          return ''; 
       }
 
-    }
-    return NULL;
+      $mediaFieldName = $media->getSource()->getConfiguration()['source_field'] ?? '';
+      if (empty($mediaFieldName)) {
+          return ''; 
+      }
+
+      $imageField = $media->get($mediaFieldName);
+
+      if (!$imageField->isEmpty()) {
+          $firstItem = $imageField->first();
+          
+          if ($firstItem instanceof FieldItemInterface) {
+              $file = $firstItem->getEntity();
+              /** @var \Drupal\image\Plugin\Field\FieldType\ImageItem $firstItem */
+              $idFile = $firstItem->target_id;
+              $file = File::load($idFile);
+              if ($file instanceof File) {
+                  $fileUri = $file->getFileUri();
+
+                  if ($fileUri) {
+
+                      if ($imageStyle !== 'default') {
+                          $imageStyleEntity = ImageStyle::load($imageStyle);
+                          if ($imageStyleEntity) {
+                              return $imageStyleEntity->buildUri($fileUri);
+                          }
+                      } else {
+                          return $file->uri->value; 
+                      }
+                  }
+              }
+          }
+      }
+
+      return ''; 
   }
 
+
   /**
-   * Get media uri by mediaId and imageStyle.
+   * Get media url by mediaId and imageStyle.
    *
-   * @param string mediaId $mediaId
-   * @param string imageStyle
+   * @param string $mediaId
+   * @param string $imageStyle
    *
    * @return string
-   * */
+   *   The media URL or an empty string if not found.
+   */
   public function getMediaUrlByMediaIdAndImageStyle(string $mediaId, string $imageStyle): string {
     $media = Media::load($mediaId);
-    $mediaFieldName = $media->getSource()->getConfiguration()['source_field'];
+    if (!$media) {
+        return ''; 
+    }
+
+    $mediaFieldName = $media->getSource()->getConfiguration()['source_field'] ?? '';
+    if (empty($mediaFieldName)) {
+        return ''; 
+    }
+
     $imageField = $media->get($mediaFieldName);
+
     if (!$imageField->isEmpty()) {
-      if ($imageStyle != 'default') {
-        return ImageStyle::load($imageStyle)->buildUrl($imageField->entity->getFileUri());
-      }
-      else {
-        $imageField = $media->get($mediaFieldName)->entity;
-        $imageUri = $imageField->getFileUri();
-        $imageUrl = $this->fileUrlGenerator->generateAbsoluteString($imageUri);
-        return($imageUrl);
+      $firstItem = $imageField->first();
+      if ($firstItem instanceof FieldItemInterface) {
+        /** @var \Drupal\image\Plugin\Field\FieldType\ImageItem $firstItem */
+        $idFile = $firstItem->target_id;
+        if ($idFile){
+          $file = File::load($idFile);
+          if ($file instanceof File){
+            $fileUri = $file->getFileUri();
+            if ($fileUri){
+              if ($imageStyle !== 'default') {
+                $imageStyleEntity = ImageStyle::load($imageStyle);
+                /** @var \Drupal\image\Entity\ImageStyle $imageStyleEntity */
+                return $imageStyleEntity->buildUrl($fileUri);
+              }
+              else {
+                return $this->fileUrlGenerator->generateAbsoluteString($fileUri);
+              }
+            }
+          }
+        }
       }
     }
     return '';
   }
+
 
   /**
    * Get media file data by mediaId and imageStyle.
@@ -805,37 +1033,69 @@ class UtilityService implements UtilityServiceInterface {
    * @param string $imageStyle
    *
    * @return array
-   * */
+   *   The media file data or an empty array if not found.
+   */
   public function getMediaFileDataByMediaIdAndImageStyle(string $mediaId, string $imageStyle): array {
-    $media = Media::load($mediaId);
-    $mediaFieldName = $media->getSource()->getConfiguration()['source_field'];
-    $imageField = $media->get($mediaFieldName);
-    if (!$imageField->isEmpty()) {
-      $data = $imageField->first()->toArray();
-      if ($imageStyle != 'default') {
-        $data['url'] = ImageStyle::load($imageStyle)->buildUrl($imageField->entity->getFileUri());
-      }
-      else {
-        $imageField = $media->get($mediaFieldName)->entity;
-        $imageUri = $imageField->getFileUri();
-        $data['url'] = $this->fileUrlGenerator->generateAbsoluteString($imageUri);
+      $media = Media::load($mediaId);
+      if (!$media) {
+          return []; 
       }
 
-      return $data;
+      $mediaFieldName = $media->getSource()->getConfiguration()['source_field'] ?? '';
+      if (empty($mediaFieldName)) {
+          return [];
+      }
+
+      $imageField = $media->get($mediaFieldName);
+      if (!$imageField->isEmpty()) {
+
+      $firstItem = $imageField->first();
+      if ($firstItem instanceof FieldItemInterface) {
+        /** @var \Drupal\image\Plugin\Field\FieldType\ImageItem $firstItem */
+        $idFile = $firstItem->target_id;
+        if ($idFile){
+          $file = File::load($idFile);
+          if ($file instanceof File){
+            $fileUri = $file->getFileUri();
+            if ($fileUri){
+              $data = [
+                'alt' => $firstItem->get('alt')->getValue(),
+              ];
+              if ($imageStyle !== 'default') {
+                $imageStyleEntity = ImageStyle::load($imageStyle);
+                /** @var \Drupal\image\Entity\ImageStyle $imageStyleEntity */
+                $data['url'] = $imageStyleEntity->buildUrl($fileUri);
+              }
+              else {
+                $data['url'] = $this->fileUrlGenerator->generateAbsoluteString($fileUri);
+              }
+              return $data;
+            }
+          }
+
+        }
+      }
     }
     return [];
   }
 
-  /**
-   * Returns markup from text.
-   *
-   * @param strint $text
-   *
-   * @return object
-   * */
-  public function createMarkup($text):object {
-    return Markup::create($text);
-  }
+
+
+   /**
+     * Creates markup from a string
+     *
+     * @param string|null $text
+     *   The input text, which can be a string, or null.
+     *
+     * @return object|string
+     *   The markup object.
+     */
+    public function createMarkup($text): object|string {
+      if ($text == null) {
+          $text = '';
+      }
+      return Markup::create($text);
+    }
 
   /**
    * Get entities by entity Type and bundle.
@@ -865,17 +1125,17 @@ class UtilityService implements UtilityServiceInterface {
     return $entities;
   }
 
-  /**
-   * Get an entity by entity Type and uuid.
-   *
-   * @param string $entityType
-   * @param string $uuid
-   *
-   *   return object.
-   * */
-  public function getEntityByTypeAndUuid($entityType, $uuid):array {
-    return $this->entityTypeManager->getStorage($entityType)->loadByProperties(['uuid' => $uuid]);
-  }
+  //~ /**
+   //~ * Get an entity by entity Type and uuid.
+   //~ *
+   //~ * @param string $entityType
+   //~ * @param string $uuid
+   //~ *
+   //~ * @return object.
+   //~ * */
+  //~ public function getEntityByTypeAndUuid($entityType, $uuid):array {
+    //~ return $this->entityTypeManager->getStorage($entityType)->loadByProperties(['uuid' => $uuid]);
+  //~ }
 
   /**
    * Get an entity by entity Type and id.
@@ -883,9 +1143,10 @@ class UtilityService implements UtilityServiceInterface {
    * @param string $entityType
    * @param string $id
    *
-   *   return object.
-   * */
-  public function getEntityByTypeAndId($entityType, $id):object {
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   *   The entity object or null if not found.
+   */
+  public function getEntityByTypeAndId($entityType, $id):?\Drupal\Core\Entity\EntityInterface {
     return $this->entityTypeManager->getStorage($entityType)->load($id);
   }
 
@@ -897,22 +1158,23 @@ class UtilityService implements UtilityServiceInterface {
    * @return bool
    * */
   public function isCurrentUrl($url):bool {
-
+    
     $active = FALSE;
     $currentEntityUrl = NULL;
-    $routeMatch = \Drupal::routeMatch();
-    $routeMatch = \Drupal::service('current_route_match');
+    /** @var \Drupal\Core\Routing\RouteMatchInterface $routeMatch */
+    $routeMatch = $this->getRouteMatch();
     $route = $routeMatch->getRouteName();
+    if ($route) {
+      $routeElements = explode('.', $route);
+      if ($routeElements[0] == 'entity' && $routeElements[2] == 'canonical') {
+        $currentEntity = $routeMatch->getParameter($routeElements[1]);
+        $currentEntityToLink = $currentEntity->toLink();
+        $currentEntityUrl = $currentEntityToLink->getUrl()->toString();
+      }
 
-    $routeElements = explode('.', $route);
-    if ($routeElements[0] == 'entity' && $routeElements[2] == 'canonical') {
-      $currentEntity = $routeMatch->getParameter($routeElements[1]);
-      $currentEntityToLink = $currentEntity->toLink();
-      $currentEntityUrl = $currentEntityToLink->getUrl()->toString();
-    }
-
-    if ($url == $currentEntityUrl) {
-      $active = TRUE;
+      if ($url == $currentEntityUrl) {
+        $active = TRUE;
+      }      
     }
 
     return $active;
@@ -924,8 +1186,8 @@ class UtilityService implements UtilityServiceInterface {
    * @return array
    * */
   function getAllowedThemes(): array {
-    $themes = array_filter(\Drupal::config('bootstrap_toolbox.settings')
-      ->get('selected_themes'), function($value){
+    $config = $this->configFactory->get('bootstrap_toolbox.settings');
+    $themes = array_filter($config->get('selected_themes'), function($value){
       return $value !== 0;
     });
     $allowedThemes = [];
@@ -943,8 +1205,8 @@ class UtilityService implements UtilityServiceInterface {
    * @return array
    * 
    * */
-  function getBootstrapToolboxParameters() {
-    $config = \Drupal::config('bootstrap_toolbox.settings');
+  function getBootstrapToolboxParameters(): array {
+    $config = $this->configFactory->get('bootstrap_toolbox.settings');
     $hideTitle = FALSE;
     $hideSidebars = FALSE;
     $hideBreadcrumb = FALSE;
@@ -953,11 +1215,12 @@ class UtilityService implements UtilityServiceInterface {
     $action = '';
     $settings = NULL;
     $isEditMode = FALSE;
-    
-    $routeMatch = \Drupal::routeMatch();
-    $route = $routeMatch->getRouteName();
+    $customTheme = '';
+    /** @var \Drupal\Core\Routing\RouteMatchInterface $routeMatch */
+    $routeMatch = $this->getRouteMatch();
+    /** @var \Symfony\Component\Routing\Route $routeObject */
     $routeObject = $routeMatch->getRouteObject();
-    $routeName = \Drupal::routeMatch()->getRouteName();
+    $routeName = $routeMatch->getRouteName();
     $params = $routeMatch->getParameters()->keys();
     
     // Check page type and set the action 
@@ -977,61 +1240,404 @@ class UtilityService implements UtilityServiceInterface {
       $action = 'processFrontPage';
     }
     
-    // Get config source
-    if ($action == 'processFrontPage') {
-      $settings = $config->get('front_page_options');
-      $settings['custom_theme'] = $config->get('custom_theme');
-    }
-    elseif ($action == 'processController'){
-      $settings = $routeObject->getOption('bootstrap_toolbox');
-    }
-    elseif ($action == 'processView'){
-      $viewId = $routeMatch->getParameter('view_id');
-      $displayId = $routeMatch->getParameter('display_id');
-      $key = "{$viewId}_{$displayId}";
-      $settings = $config->get("views_custom_themes.{$key}");
-    }
-    elseif ($action == 'processNode'){
-      $node = $routeMatch->getParameter('node');
-      $nodeTypeId = $node->bundle();
-      $nodeType = NodeType::load($nodeTypeId);
-      $settings = $nodeType->getThirdPartySettings('bootstrap_toolbox');
-    }
+    if($action){
+    
+      // Get config source
+      if ($action == 'processFrontPage') {
+        $settings = $config->get('front_page_options');
+        $settings['custom_theme'] = $config->get('custom_theme');
+      }
+      elseif ($action == 'processController'){
+        $settings = $routeObject->getOption('bootstrap_toolbox');
+      }
+      elseif ($action == 'processView'){
+        $viewId = $routeMatch->getParameter('view_id');
+        $displayId = $routeMatch->getParameter('display_id');
+        $key = "{$viewId}_{$displayId}";
+        $settings = $config->get("views_custom_themes.{$key}");
+      }
+      elseif ($action == 'processNode'){
+        $node = $routeMatch->getParameter('node');
+        $nodeTypeId = $node->bundle();
+        /** @var \Drupal\node\Entity\NodeType $nodeType */
+        $nodeType = NodeType::load($nodeTypeId);
+        $settings = $nodeType->getThirdPartySettings('bootstrap_toolbox');
+      }
 
-    // Get config variables
-    if ($settings){
-      $hideTitle = $settings['hide_title'] ?? FALSE;
-      $hideSidebars = $settings['hide_sidebars'] ?? FALSE;
-      $hideBreadcrumb = $settings['hide_breadcrumb'] ?? FALSE;
-      $edgeToEdge = $settings['edge_to_edge'] ?? FALSE;
-      $customTheme = $settings['custom_theme'] ?? FALSE;
-    }
+      // Get config variables
+      if ($settings){
+        $hideTitle = $settings['hide_title'] ?? FALSE;
+        $hideSidebars = $settings['hide_sidebars'] ?? FALSE;
+        $hideBreadcrumb = $settings['hide_breadcrumb'] ?? FALSE;
+        $edgeToEdge = $settings['edge_to_edge'] ?? FALSE;
+        $customTheme = $settings['custom_theme'] ?? FALSE;
+      }
 
-    // If node override nodeType settings
-    if ($action == 'processNode' &&
-      $node->hasField('override_node_settings') &&
-      $node->get('override_node_settings')->value)
-      {
-      $hideSidebars = $node->hide_sidebars->value ?? $hideSidebars;
-      $hideTitle = $node->hide_title->value ?? $hideTitle;
-      $hideBreadcrumb = $node->hide_breadcrumb->value ?? $hideBreadcrumb;
-      $edgeToEdge = $node->edge_to_edge->value ?? $edgeToEdge;
-      $customTheme = $node->edge_to_edge->value ?? $customTheme;
-    }
+      // If node override nodeType settings
+      if ($action == 'processNode' &&
+        $node->hasField('override_node_settings') &&
+        $node->get('override_node_settings')->value)
+        {
+        $hideSidebars = $node->hide_sidebars->value ?? $hideSidebars;
+        $hideTitle = $node->hide_title->value ?? $hideTitle;
+        $hideBreadcrumb = $node->hide_breadcrumb->value ?? $hideBreadcrumb;
+        $edgeToEdge = $node->edge_to_edge->value ?? $edgeToEdge;
+        $customTheme = $node->edge_to_edge->value ?? $customTheme;
+      }
 
-    $params = [
-      'hideSidebars' =>  $hideSidebars,
-      'hideTitle' => $hideTitle,
-      'hideBreadcrumb' => $hideBreadcrumb,
-      'edgeToEdge' => $edgeToEdge,
-      'custom_theme' => $customTheme,
-    ];
-    if ($action = 'processNode'){
-      $params['node'] = $node;
+      $params = [
+        'hideSidebars' =>  $hideSidebars,
+        'hideTitle' => $hideTitle,
+        'hideBreadcrumb' => $hideBreadcrumb,
+        'edgeToEdge' => $edgeToEdge,
+        'customTheme' => $customTheme,
+        'routeName' => NULL,
+        'node' => NULL,
+      ];
+      if ($action == 'processNode'){
+        $params['node'] = $node;
+        $params['routeName'] = $routeName;
+      }
+      return $params;
     }
-    return($params);
+    else {
+      return [];
+    }
 
     
   }
 
+  /**
+   * Get behavior selectors
+   *
+   * @return string|NULL
+   * */
+  function getBehaviorSelectors(): ?string {
+
+    $baseThemes = $this->getBaseThemes();
+    $theme = $this->themeManager->getActiveTheme()->getName();
+    $themeSettings = $this->configFactory->get("{$theme}.settings");
+    $baseTheme = NULL;
+    $third_party_settings = $themeSettings->get('third_party_settings') ?? NULL;
+    
+    if (isset($third_party_settings['bootstrap_toolbox']['base_theme'])) {
+      $baseTheme = $third_party_settings['bootstrap_toolbox']['base_theme'];
+      if(array_key_exists($baseTheme, $baseThemes)){
+        return $baseTheme;
+      }
+    } 
+    return NULL;
+    
+  }
+
+  /**
+   * Get custom base themes
+   *
+   * @return array|null 
+   *
+   * */
+  public function getCustomBasethemes(): ?array {
+    $customKnownThemes = [];
+    $publicPath = $this->realpath('public://');
+    $filePath = $publicPath . '/bootstrap_toolbox/theme_data.yml';
+    $content = file_get_contents($filePath);
+    if($content){
+       $content = Yaml::parse($content);
+       $customKnownThemes = $content['knownthemes'];
+    }
+    return $customKnownThemes;
+  }
+
+
+
+  /**
+   * Returns config base themes
+   *
+   * @returns array|null
+   */
+  public function getConfigBaseThemes(): ?array {
+    $config = $this->configFactory->get('bootstrap_toolbox.known_themes');
+    $knownThemes = [];
+    foreach ($config->get('known_themes') as $theme=>$data){
+      $knownThemes[$theme] = $data['name'];
+    }
+    return $knownThemes;  
+  }
+
+  /**
+   * Save custom base themes
+   *
+   * @param array $newData
+   *   The new data to save in the YAML file.
+   * 
+   * @return bool
+   *   Returns TRUE if the data was saved successfully, FALSE otherwise.
+   *
+   * */
+  public function saveCustomBasethemes($newData): bool {
+    $yamlContent = Yaml::dump(['knownthemes' => $newData], 4, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
+
+    $comment = "#~ ===================================================\n";
+    $comment .= "#~ Important Notice\n";
+    $comment .= "#~ Editing this file manually can cause major errors.\n";
+    $comment .= "#~ You must edit it via the Bootstrap Toolbox settings\n";
+    $comment .= "#~ ===================================================\n\n";
+
+    $finalContent = $comment . $yamlContent;
+  
+    $publicPath = $this->realpath('public://');
+    $directoryPath = $publicPath. '/bootstrap_toolbox';
+    if ($this->fileSystem->prepareDirectory($directoryPath, \Drupal\Core\File\FileSystemInterface::CREATE_DIRECTORY)){
+      $filePath = $directoryPath . '/theme_data.yml';
+      if (file_put_contents($filePath, $finalContent) === FALSE) {
+        $action = 'addError';
+        $message = $this->t('Failed to write to YAML file.');
+        $this->displayMessage($action,$message);
+        $this->logMessage('error', $message, []);
+        return FALSE;
+      } else {
+        $action = 'addMessage';
+        $message = $this->t('YAML file updated successfully.');
+        $this->displayMessage($action,$message);
+        $this->logMessage('info', $message, []);
+        return TRUE;
+      }
+    }
+    else {
+      $action = 'addError';
+      $message = $this->t('Failed to create directory @directoryPath in @publicPath',[
+          '@directoryPath' => $directoryPath,
+          '@publicPath' => $publicPath,
+        ]
+      );
+      $this->displayMessage($action,$message);
+      $this->logMessage('error', $message, []);
+      return FALSE;
+    }
+    
+    
+  }
+
+  /**
+   * Get Route Match object
+   *
+   * @return object
+   * */
+  public function getRouteMatch(): object {
+   return $this->routeMatch;
+  }
+
+  /**
+   * Get a class name from a name
+   *
+   * @param string $name
+   * 
+   * @return string $className
+   * 
+   * */
+  public function getClassName($name): string {
+    return Html::getClass($name);
+  }
+
+  //~ /**
+   //~ * Get the referer
+   //~ *
+   //~ * 
+   //~ * 
+   //~ * */
+  //~ public function getReferer() {
+    //~ $request = $this->requestStack->getCurrentRequest();
+    //~ kint($request);
+    //~ $referrer = $request->headers->get('referer');
+    //~ return $referrer;
+  //~ }
+
+  /**
+   * Get theme config
+   *
+   * @param string $themeId
+   *
+   * @return array
+   *
+   * */
+  public function getThemeConfig($themeId): array {
+    return $this->configFactory->get($themeId . '.settings')->getRawData();
+  }
+
+  /**
+   * Get link from text and url
+   *
+   * @para string $text
+   * @para string $url
+   *
+   * @return string
+   * */
+  public function getLinkFromTextAndUrl($text, $url): string {
+    $url = Url::fromUri('internal:/' . $url, ['absolute' => TRUE]);
+    $link = Link::fromTextAndUrl($text, $url);
+    $link_html = $link->toString()->__toString();
+    return $link_html;
+  }
+
+  /**
+   * Get bootstrap_toolbox.settings
+   *
+   * @return array|NULL
+   *
+   * */
+  public function getBootstrapToolboxSettings(): ?array {
+    return ($this->configFactory->get('bootstrap_toolbox.settings')->getRawData());
+  }
+
+  /**
+   * Get editable bootstrap_toolbox.settings
+   *
+   * @return \Drupal\Core\Config\Config
+   *   The editable configuration object.
+   *
+   * */
+  public function getEditableBootstrapToolboxSettings(): object {
+    return ($this->configFactory->get('bootstrap_toolbox.settings'));
+  }
+
+  /**
+   * Get node type label
+   *
+   * @param string $nodeType
+   *
+   * @return string|NULL
+   *
+   * */
+  public function getNodeTypeLabel($nodeType): ?string {
+    $nodeTypeEntity = $this->entityTypeManager->getStorage('node_type')->load($nodeType);
+    if($nodeTypeEntity){
+      return $nodeTypeEntity->label();  
+    }
+    return NULL;
+
+  }
+
+  /**
+   * Get the default theme
+   *
+   * @return string
+   * */
+  public function getDefaultTheme():string {
+    return $this->configFactory->get('system.theme')->get('default');
+  }
+
+  /**
+   * Displays a message using the messenger service.
+   *
+   * @param string $action
+   *   The messenger method to call. Possible values are: 'addWarning', 'addError', 'addMessage', 'addStatus'.
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $message
+   *   The message to display. This can be either a plain string or a translatable string.
+   *
+   * @return void
+   *   This method does not return a value.
+   */
+  public function displayMessage($action,$message): void{
+    $this->messenger->$action($message);
+  }
+
+  /**
+   * Log a message using the logger service.
+   *
+   * @param string $level
+   *   The logging level method to call. Possible values are: 'error', 'warning', 'info', 'debug', 'notice', 'critical', 'alert', 'emergency'.
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $message
+   *   The message to log. This can be either a plain string or a translatable string.
+   * @param array $context
+   *   (optional) An array of context information to include in the log entry.
+   *
+   * @return void
+   *   This method does not return a value.
+   */
+  public function logMessage(string $level, $message, array $context = []): void {
+    $this->logger->$level($message, $context);
+  }
+
+  /**
+   * Render a renderable array in isolation.
+   *
+   * This method renders a renderable array using the `renderInIsolation` method
+   * from the renderer service. Rendering in isolation ensures that the renderable
+   * array is processed separately from other render contexts, avoiding potential
+   * conflicts with other parts of the page rendering.
+   *
+   * @param array $renderableArray
+   *   A renderable array containing structured content that Drupal can render.
+   *   Renderable arrays are the standard way to represent content in Drupal, and
+   *   can include elements such as forms, links, and HTML markup.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface|string|null
+   *   The rendered output of the renderable array as a safe string or markup object.
+   *   The return value can be directly output or stored for later use.
+   *
+   * @throws \Throwable
+   *   Thrown if the renderable array cannot be properly rendered.
+   */
+  public function renderArray(array $renderableArray): \Drupal\Component\Render\MarkupInterface|string|null {
+    return $this->renderService->renderInIsolation($renderableArray);
+  }
+
+
+  /**
+   * Retrieves the absolute path of a given file or directory.
+   *
+   * @param string $arg
+   *   The URI of the file or directory (e.g., 'public://example.txt').
+   *
+   * @return string|false
+   *   The absolute path to the file or directory, or FALSE if it does not exist.
+   */
+  public function realPath($arg): string|false {
+    $realPath = $this->fileSystem->realpath($arg);
+    if ($realPath !== false && file_exists($realPath)){
+      return $realPath;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Checks if a module is installed and enabled.
+   *
+   * @param string $moduleName
+   *   The machine name of the module to check.
+   *
+   * @return bool
+   *   TRUE if the module exists and is enabled, FALSE otherwise.
+   */
+  public function checkModule($moduleName): bool {
+    return $this->moduleHandler->moduleExists($moduleName);
+  }
+
+  /**
+   * Retrieves a list of installed themes.
+   *
+   * @return array
+   *   An associative array where the keys are the theme machine names,
+   *   and the values are the human-readable theme names.
+   */
+  public function getThemes(): array {
+    $installed_themes = $this->themeHandler->listInfo();
+    $themes = [];
+    foreach($installed_themes as $themeKey => $themeData){
+      $themes[$themeKey] = $themeData->getName();
+    }
+    return $themes;
+  }
+
+  /**
+   * Get config factory key
+   *
+   * @param string $configKey
+   *
+   * @return object
+   *
+   */
+  public function getConfig($configKey): object {
+    return $this->configFactory->get($configKey);
+  }
 }

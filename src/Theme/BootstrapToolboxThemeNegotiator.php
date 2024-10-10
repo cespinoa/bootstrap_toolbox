@@ -12,24 +12,24 @@ class BootstrapToolboxThemeNegotiator implements ThemeNegotiatorInterface {
   /**
    * The utility service.
    *
-   * @var Drupal\bootstrap_toolbox\UtilityServiceInterface
+   * @var \Drupal\bootstrap_toolbox\UtilityServiceInterface
    */
-  protected $utilityService;
+  protected UtilityServiceInterface $utilityService;
 
   /**
    * The customTheme value.
    */
-  protected $customTheme;
+  protected string $customTheme;
+
+  
 
   /**
    * Constructs a ThemeNegotiator object.
-   *
-   * @param \Drupal\bootstrap_toolbox\UtilityServiceInterface
-   *   The utility service
-   */
-  public function __construct(
-    UtilityServiceInterface $utilityService
-    ){
+   * 
+   * @param \Drupal\bootstrap_toolbox\UtilityServiceInterface $utilityService
+   *  The utility service.
+   * */
+  public function __construct(UtilityServiceInterface $utilityService) {
     $this->utilityService = $utilityService;
   }
 
@@ -37,9 +37,9 @@ class BootstrapToolboxThemeNegotiator implements ThemeNegotiatorInterface {
    * {@inheritdoc}
    */
   public function applies(RouteMatchInterface $route_match) {
-    $customTheme = $this->utilityService->getBootstrapToolboxParameters()['custom_theme'];
-    if($customTheme){
-      $this->customTheme = $customTheme;
+    $params = $this->utilityService->getBootstrapToolboxParameters();
+    if($params && array_key_exists('custom_theme',$params) && $params['custom_theme']){
+      $this->customTheme = $params['custom_theme'];
       return TRUE;
     }
     return FALSE;
@@ -54,7 +54,8 @@ class BootstrapToolboxThemeNegotiator implements ThemeNegotiatorInterface {
       return $this->customTheme;
     }
     
-    return \Drupal::config('system.theme')->get('default');
+    return $this->utilityService->getDefaultTheme();
+    
   }
 
 }

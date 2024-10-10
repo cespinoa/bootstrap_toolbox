@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\bootstrap_toolbox\Form;
 
 use Drupal\bootstrap_toolbox\UtilityServiceInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -20,28 +19,18 @@ final class NodesExtraFieldsSettingForm extends ConfirmFormBase {
   /**
    * The utility service.
    *
-   * @var Drupal\bootstrap_toolbox\UtilityServiceInterface
+   * @var \Drupal\bootstrap_toolbox\UtilityServiceInterface
    */
   protected $utilityService;
 
   /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
    * Constructs a new NodesExtraFieldsSettingForm object.
    *
-   * @param Drupal\bootstrap_toolbox\UtilityServiceInterface $utilityService
+   * @param \Drupal\bootstrap_toolbox\UtilityServiceInterface $utilityService
    *   The Utility service.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
-   *   The module handler service.
    */
-  public function __construct(UtilityServiceInterface $utilityService, ModuleHandlerInterface $moduleHandler) {
+  public function __construct(UtilityServiceInterface $utilityService) {
     $this->utilityService = $utilityService;
-    $this->moduleHandler = $moduleHandler;
   }
 
   /**
@@ -49,29 +38,28 @@ final class NodesExtraFieldsSettingForm extends ConfirmFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('bootstrap_toolbox.utility_service'),
-      $container->get('module_handler')
+      $container->get('bootstrap_toolbox.utility_service')
     );
   }
 
   /**
    * The submitted action needing to be confirmed.
    *
-   * @var array
+   * @var string[]
    */
   protected $nodeTypesToAdd = [];
 
   /**
    * The submitted data needing to be confirmed.
    *
-   * @var array
+   * @var string[]
    */
   protected $nodeTypesToRemove = [];
 
   /**
    * The submitted data needing to be confirmed.
    *
-   * @var array
+   * @var string[]
    */
   protected $selectedNodeTypes = [];
 
@@ -113,7 +101,7 @@ final class NodesExtraFieldsSettingForm extends ConfirmFormBase {
     $markup[] = '<li>' . $msg3 . '</li>';
     $markup[] = '<li>' . $msg4 . '</li>';
     $markup[] = '<li>' . $msg5 . '</li>';
-    if ($this->moduleHandler->moduleExists('bt_toc')) {
+    if ($this->utilityService->checkModule('bt_toc')) {
       $markup[] = '<li>' . $msg6 . '</li>';
     }
     $markup[] = '</ul>';
@@ -170,12 +158,14 @@ final class NodesExtraFieldsSettingForm extends ConfirmFormBase {
       '@msg_create' => 'Boostrap Toolbox custom fields will be added to the following node types',
     ];
 
-    if ($this->nodeTypesToRemove && count($this->nodeTypesToRemove)) {
+    if (!empty($this->nodeTypesToRemove)) {
       $deleteText = $this->utilityService->buildDescriptionList($nodeTypes, $this->nodeTypesToRemove, 'remove');
     }
-    if ($this->nodeTypesToAdd && count($this->nodeTypesToAdd)) {
+
+    if (!empty($this->nodeTypesToAdd)) {
       $createText = $this->utilityService->buildDescriptionList($nodeTypes, $this->nodeTypesToAdd, 'add');
     }
+
 
     return $this->t($deleteText . $createText, $strings);
   }
@@ -218,16 +208,18 @@ final class NodesExtraFieldsSettingForm extends ConfirmFormBase {
     $nodeTypesToRemove = [];
     $nodeTypesToAdd = [];
 
-    if ($this->nodeTypesToRemove && count($this->nodeTypesToRemove)) {
+    if (!empty($this->nodeTypesToRemove)) {
       foreach ($this->nodeTypesToRemove as $key => $value) {
-        $nodeTypesToRemove[] = $key;
+          $nodeTypesToRemove[] = $key;
       }
     }
-    if ($this->nodeTypesToAdd && count($this->nodeTypesToAdd)) {
+
+    if (!empty($this->nodeTypesToAdd)) {
       foreach ($this->nodeTypesToAdd as $key => $value) {
-        $nodeTypesToAdd[] = $key;
+          $nodeTypesToAdd[] = $key;
       }
     }
+
 
     // Add fields starting.
     $fieldnames = [
@@ -290,7 +282,7 @@ final class NodesExtraFieldsSettingForm extends ConfirmFormBase {
       }
     }
 
-    $config = \Drupal::configFactory()->getEditable('bootstrap_toolbox.settings');
+    $config = $this->utilityService->getEditableBootstrapToolboxSettings(); //  \Drupal::configFactory()->getEditable('bootstrap_toolbox.settings');
     $config->set('selectedNodeTypes', $this->selectedNodeTypes)->save();
 
     $this->messenger()->addStatus($this->t('Done!'));

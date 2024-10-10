@@ -24,9 +24,18 @@ entity.bootstrap_toolbox_style.overview:
   parent: bootstrap_toolbox.settings
   description: 'List of bootstrap toolbox styles to extend site functionality.'
   route_name: entity.bootstrap_toolbox_style.collection
+  weight: 30
 
 entity.bootstrap_toolbox_scope.overview:
   title: Scopes
   parent: bootstrap_toolbox.settings
   description: 'List of bootstrap toolbox scopes to extend site functionality.'
   route_name: entity.bootstrap_toolbox_scope.collection
+  weight: 40
+
+bootstrap_toolbox.report:
+  title: Report
+  parent: bootstrap_toolbox.settings
+  description: 'Report about Bootstrap Toolbox settings.'
+  route_name: bootstrap_toolbox.report
+  weight: 50

@@ -20,6 +20,7 @@ function bootstrap_toolbox_form_alter(
   FormStateInterface $form_state,
   $form_id,
 ) {
+  
   $utilityService = \Drupal::service('bootstrap_toolbox.utility_service');
   if ($form_id == 'block_form'
     || $form['#form_id'] === 'layout_builder_add_block'
@@ -31,43 +32,50 @@ function bootstrap_toolbox_form_alter(
       ->getScopeListFiltered(['blocks_formatters']);
 
     if ($form_id == 'block_form') {
-      $block = $form_state->getFormObject()->getEntity();
-      $config = \Drupal::config('bootstrap_toolbox.settings');
+      $form_object = $form_state->getFormObject();
+      if ($form_object instanceof \Drupal\Core\Entity\EntityFormInterface) {
 
-      $form['bootstrap_toolbox_verticaltabs'] = [
-        '#type' => 'vertical_tabs',
-        '#title' => t('Bootstrap Toolbox Settings'),
-        '#weight' => 0,
-      ];
+        $block = $form_object->getEntity();
 
-      $form['bootstrap_toolbox'] = [
-        '#type' => 'details',
-        '#title' => t('Wrapper and classes'),
-        '#collapsible' => TRUE,
-        '#collapsed' => FALSE,
-        '#group' => 'bootstrap_toolbox_verticaltabs',
-      ];
+        if ($block instanceof \Drupal\block\Entity\Block) {
+            $config = \Drupal::config('bootstrap_toolbox.settings');
 
-      $form['bootstrap_toolbox']['wrapper'] = [
-        '#type' => 'select',
-        '#title' => t('Bootstrap Toolbox Extra Wrapper'),
-        '#default_value' => $block
-          ->getThirdPartySetting('bootstrap_toolbox', 'wrapper'),
-        '#empty_option' => t('None'),
-        '#options' => $wrapperOptions,
-      ];
+            $form['bootstrap_toolbox_verticaltabs'] = [
+              '#type' => 'vertical_tabs',
+              '#title' => t('Bootstrap Toolbox Settings'),
+              '#weight' => 0,
+            ];
 
-      $form['bootstrap_toolbox']['styles'] = [
-        '#type' => 'select',
-        '#title' => t('Bootstrap Toolbox Extra Classes'),
-        '#default_value' => $block
-          ->getThirdPartySetting('bootstrap_toolbox', 'styles'),
-        '#options' => $stylesOptions,
-        '#empty_option' => t('None'),
-      ];
+            $form['bootstrap_toolbox'] = [
+              '#type' => 'details',
+              '#title' => t('Wrapper and classes'),
+              '#collapsible' => TRUE,
+              '#collapsed' => FALSE,
+              '#group' => 'bootstrap_toolbox_verticaltabs',
+            ];
 
-      $form['actions']['submit']['#submit'][] = 'bootstrap_toolbox_form_alter_submit';
+            $form['bootstrap_toolbox']['wrapper'] = [
+              '#type' => 'select',
+              '#title' => t('Bootstrap Toolbox Extra Wrapper'),
+              '#default_value' => $block
+                ->getThirdPartySetting('bootstrap_toolbox', 'wrapper'),
+              '#empty_option' => t('None'),
+              '#options' => $wrapperOptions,
+            ];
 
+            $form['bootstrap_toolbox']['styles'] = [
+              '#type' => 'select',
+              '#title' => t('Bootstrap Toolbox Extra Classes'),
+              '#default_value' => $block
+                ->getThirdPartySetting('bootstrap_toolbox', 'styles'),
+              '#options' => $stylesOptions,
+              '#empty_option' => t('None'),
+            ];
+
+            $form['actions']['submit']['#submit'][] = 'bootstrap_toolbox_form_alter_submit';
+        }
+
+      }
     }
     elseif ($form_id === 'layout_builder_add_block' ||
       $form_id === 'layout_builder_update_block') {
@@ -107,62 +115,68 @@ function bootstrap_toolbox_form_alter(
 
   }
   elseif ($form_id === 'node_type_edit_form' || $form_id === 'node_type_add_form') {
-    /** @var \Drupal\node\Entity\NodeType $nodeType */
-    $nodeType = $form_state
-      ->getFormObject()->getEntity();
-    $hideTitle = $nodeType
-      -> getThirdPartySetting('bootstrap_toolbox', 'hide_title', FALSE);
-    $hideSidebars = $nodeType
-      ->getThirdPartySetting('bootstrap_toolbox', 'hide_sidebars', FALSE);
-    $hideBreadcrumb = $nodeType
-      ->getThirdPartySetting('bootstrap_toolbox', 'hide_breadcrumb', FALSE);
-    $edgeToEdge = $nodeType
-      ->getThirdPartySetting('bootstrap_toolbox', 'edge_to_edge', FALSE);
-    $customTheme = $nodeType
-      ->getThirdPartySetting('bootstrap_toolbox', 'custom_theme', FALSE);
+    /** @var \Drupal\Core\Entity\EntityFormInterface $formObject */
+    $formObject = $form_state->getFormObject();
+    if ($formObject instanceof \Drupal\Core\Entity\EntityFormInterface) {
+      $nodeType = $formObject->getEntity();
+
+      if ($nodeType instanceof \Drupal\node\Entity\NodeType) {
     
-    $form['bootstrap_toolbox'] = [
-      '#type' => 'details',
-      '#title' => t('Bootstrap Toolbox Settings'),
-      '#group' => 'additional_settings',
-    ];
+        $hideTitle = $nodeType
+          -> getThirdPartySetting('bootstrap_toolbox', 'hide_title', FALSE);
+        $hideSidebars = $nodeType
+          ->getThirdPartySetting('bootstrap_toolbox', 'hide_sidebars', FALSE);
+        $hideBreadcrumb = $nodeType
+          ->getThirdPartySetting('bootstrap_toolbox', 'hide_breadcrumb', FALSE);
+        $edgeToEdge = $nodeType
+          ->getThirdPartySetting('bootstrap_toolbox', 'edge_to_edge', FALSE);
+        $customTheme = $nodeType
+          ->getThirdPartySetting('bootstrap_toolbox', 'custom_theme', FALSE);
+        
+        $form['bootstrap_toolbox'] = [
+          '#type' => 'details',
+          '#title' => t('Bootstrap Toolbox Settings'),
+          '#group' => 'additional_settings',
+        ];
 
-    $form['bootstrap_toolbox']['hide_title'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Hide title'),
-      '#default_value' => $hideTitle,
-    ];
+        $form['bootstrap_toolbox']['hide_title'] = [
+          '#type' => 'checkbox',
+          '#title' => t('Hide title'),
+          '#default_value' => $hideTitle,
+        ];
 
-    $form['bootstrap_toolbox']['hide_sidebars'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Hide sidebars'),
-      '#default_value' => $hideSidebars,
-    ];
+        $form['bootstrap_toolbox']['hide_sidebars'] = [
+          '#type' => 'checkbox',
+          '#title' => t('Hide sidebars'),
+          '#default_value' => $hideSidebars,
+        ];
 
-    $form['bootstrap_toolbox']['hide_breadcrumb'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Hide breadcrumbs'),
-      '#default_value' => $hideBreadcrumb,
-    ];
+        $form['bootstrap_toolbox']['hide_breadcrumb'] = [
+          '#type' => 'checkbox',
+          '#title' => t('Hide breadcrumbs'),
+          '#default_value' => $hideBreadcrumb,
+        ];
 
-    $form['bootstrap_toolbox']['edge_to_edge'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Display edge to edge'),
-      '#default_value' => $edgeToEdge,
-    ];
+        $form['bootstrap_toolbox']['edge_to_edge'] = [
+          '#type' => 'checkbox',
+          '#title' => t('Display edge to edge'),
+          '#default_value' => $edgeToEdge,
+        ];
 
-    $form['bootstrap_toolbox']['custom_theme'] = [
-      '#type' => 'select',
-      '#title' => t('Custom theme'),
-      '#default_value' => $customTheme,
-      '#options' => $utilityService->getAllowedThemes(),
-      '#empty_option' => t('None'),
-      '#weight' => 90,
-    ];
+        $form['bootstrap_toolbox']['custom_theme'] = [
+          '#type' => 'select',
+          '#title' => t('Custom theme'),
+          '#default_value' => $customTheme,
+          '#options' => $utilityService->getAllowedThemes(),
+          '#empty_option' => t('None'),
+          '#weight' => 90,
+        ];
 
-    $form['#entity_builders'][] = 'bootstrap_toolbox_form_node_type_edit_form_builder';
-
+        $form['#entity_builders'][] = 'bootstrap_toolbox_form_node_type_edit_form_builder';
+      }
+    }
   }
+
 }
 
 /**
@@ -186,13 +200,16 @@ function bootstrap_toolbox_submit_block_form(array $form, FormStateInterface $fo
  * Implements hook_block_submit_alter().
  */
 function bootstrap_toolbox_form_alter_submit($form, FormStateInterface $formState) {
-  $block = $formState->getFormObject()->getEntity();
-  // ['bootstrap_toolbox'];
-  $settings = $formState->getValue('bootstrap_toolbox');
-  $block->setThirdPartySetting('bootstrap_toolbox', 'wrapper', $settings['wrapper']);
-  $block->setThirdPartySetting('bootstrap_toolbox', 'styles', $settings['styles']);
-  $block->save();
-  // ~ $text = $settings['wrapper'];
+  $formObject = $formState->getFormObject();
+  if ($formObject instanceof \Drupal\Core\Entity\EntityFormInterface){
+    $block = $formObject->getEntity();
+    if ($block instanceof \Drupal\block\Entity\Block){
+      $settings = $formState->getValue('bootstrap_toolbox');
+      $block->setThirdPartySetting('bootstrap_toolbox', 'wrapper', $settings['wrapper']);
+      $block->setThirdPartySetting('bootstrap_toolbox', 'styles', $settings['styles']);
+      $block->save();
+    }
+  }
 }
 
 /**
@@ -212,16 +229,14 @@ function bootstrap_toolbox_block_view_alter(array &$build, BlockPluginInterface 
     $style = $utilityService->getStyleById($style);
   }
 
-  if ($wrapper && !$style) {
-    $build['#prefix'] = '<div class="' . $wrapper . '">';
-    $build['#suffix'] = '</div>';
-  }
-  elseif ($wrapper && $style) {
+  if ($wrapper && $style) {
     $build['#prefix'] = '<div class="' . $style . '"><div class="' . $wrapper . '">';
     $build['#suffix'] = '</div></div>';
-  }
-  elseif (!$wrapper && $style) {
-    $build['#attributes'] = ['class' => [$style]];
+  } elseif ($wrapper) {
+    $build['#prefix'] = '<div class="' . $wrapper . '">';
+    $build['#suffix'] = '</div>';
+  } elseif ($style) {
+    $build['#attributes']['class'][] = $style;
   }
 
 }
@@ -232,40 +247,46 @@ function bootstrap_toolbox_block_view_alter(array &$build, BlockPluginInterface 
  * Preprocess inline-blocks from Layout Builder.
  */
 function bootstrap_toolbox_preprocess_layout(&$variables) {
-  if (array_key_exists('content', $variables['content'])) {
+  if (isset($variables['content']['content'])) {
     foreach ($variables['content']['content'] as $key => $content) {
-      if ($key != '#attributes') {
-        if (array_key_exists('#plugin_id', $content) &&
-          strpos($content['#plugin_id'], 'block_content:') === 0) {
-          if (array_key_exists('#bootstrap_toolbox_blockstyle', $content)) {
-            $wrapper = $content['#bootstrap_toolbox_blockstyle']['wrapper'];
-            $styles = $content['#bootstrap_toolbox_blockstyle']['styles'];
+      if ($key !== '#attributes' && isset($content['#plugin_id']) &&
+        strpos($content['#plugin_id'], 'block_content:') === 0) {
 
-            $utilityService = \Drupal::service('bootstrap_toolbox.utility_service');
-            if ($wrapper && $wrapper != 'none') {
-              $wrapper = $utilityService->getWrapperById($wrapper);
-            }
+        if (isset($content['#bootstrap_toolbox_blockstyle'])) {
+          $wrapper = $content['#bootstrap_toolbox_blockstyle']['wrapper'] ?? NULL;
+          $styles = $content['#bootstrap_toolbox_blockstyle']['styles'] ?? NULL;
 
-            if ($styles && $styles != 'none') {
-              $styles = $utilityService->getStyleById($styles);
-            }
-            if ($wrapper && !$styles) {
-              $variables['content']['content'][$key]['#prefix'] = '<div class="' . $wrapper . '">';
-              $variables['content']['content'][$key]['#suffix'] = '</div>';
-            }
-            elseif ($wrapper && $styles) {
-              $variables['content']['content'][$key]['#prefix'] =
-                '<div class="' . $styles . '"><div class="' . $wrapper . '">';
-              $variables['content']['content'][$key]['#suffix'] = '</div></div>';
-            }
-            elseif (!$wrapper && $styles) {
-              $variables['content']['content'][$key]['#attributes'] = ['class' => [$styles]];
-            }
+          $utilityService = \Drupal::service('bootstrap_toolbox.utility_service');
 
+          // Procesa el wrapper y el estilo.
+          if ($wrapper && $wrapper !== 'none') {
+            $wrapper = $utilityService->getWrapperById($wrapper);
+          } else {
+            $wrapper = NULL;
+          }
+
+          if ($styles && $styles !== 'none') {
+            $styles = $utilityService->getStyleById($styles);
+          } else {
+            $styles = NULL;
+          }
+
+          // Establecer el prefijo y el sufijo en función de los valores de wrapper y styles.
+          if ($wrapper && $styles) {
+            $variables['content']['content'][$key]['#prefix'] =
+              '<div class="' . $styles . '"><div class="' . $wrapper . '">';
+            $variables['content']['content'][$key]['#suffix'] = '</div></div>';
+          }
+          elseif ($wrapper) {
+            $variables['content']['content'][$key]['#prefix'] = '<div class="' . $wrapper . '">';
+            $variables['content']['content'][$key]['#suffix'] = '</div>';
+          }
+          elseif ($styles) {
+            $variables['content']['content'][$key]['#attributes']['class'][] = $styles;
           }
         }
       }
     }
   }
-
 }
+

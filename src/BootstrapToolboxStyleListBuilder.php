@@ -13,6 +13,9 @@ use Drupal\Core\Link;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Url;
+use Drupal\bootstrap_toolbox\UtilityServiceInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Core\Form\FormBuilderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -20,6 +23,25 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
 
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * The form builder service.
+   *
+   * @var \Drupal\Core\Form\FormBuilderInterface
+   */
+  protected $formBuilder;
+
+  /**
+   * The utility service.
+   *
+   * @var \Drupal\bootstrap_toolbox\UtilityServiceInterface
+   */
   protected $utilityService;
 
   /**
@@ -35,7 +57,7 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
    * @var \Drupal\Core\Routing\UrlGeneratorInterface
    */
   protected $urlGenerator;
-
+  
   /**
    * Constructs a new BootstrapToolboxClassesListBuilder object.
    *
@@ -49,6 +71,10 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
    *   Custom services.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $urlGenerator
    *   The URL generator service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack service.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder service.
    */
   public function __construct(
     EntityTypeInterface $entityType,
@@ -56,11 +82,15 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
     RendererInterface $renderer,
     UtilityServiceInterface $utilityService,
     UrlGeneratorInterface $urlGenerator,
+    RequestStack $request_stack,
+    FormBuilderInterface $form_builder
   ) {
     parent::__construct($entityType, $storage);
     $this->renderer = $renderer;
     $this->utilityService = $utilityService;
     $this->urlGenerator = $urlGenerator;
+    $this->requestStack = $request_stack;
+    $this->formBuilder = $form_builder;
   }
 
   /**
@@ -72,7 +102,9 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
       $container->get('entity_type.manager')->getStorage($entityType->id()),
       $container->get('renderer'),
       $container->get('bootstrap_toolbox.utility_service'),
-      $container->get('url_generator')
+      $container->get('url_generator'),
+      $container->get('request_stack'),
+      $container->get('form_builder')
     );
   }
 
@@ -80,7 +112,7 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function render() {
-    $build['filter_form'] = \Drupal::formBuilder()->getForm(BootstrapToolboxStyleFilterForm::class);
+    $build['filter_form'] = $this->formBuilder->getForm(BootstrapToolboxStyleFilterForm::class);
     $build += parent::render();
     return $build;
   }
@@ -89,12 +121,14 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   protected function getEntityIds() {
-
-    $scope = \Drupal::request()->query->get('scope');
-    $scope = [$scope];
-    $entities = $this->utilityService->getStyleByScope($scope);
-
-    return array_keys($entities);
+    $request = $this->requestStack->getCurrentRequest();
+    if ($request !== null) {
+        $scope = $request->query->get('scope');
+        $scope = [$scope];
+        $entities = $this->utilityService->getStyleByScope($scope);
+        return array_keys($entities);
+    }
+    return [];
   }
 
   /**
@@ -122,7 +156,11 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
   /**
    * Generates a link with onclick attribute to open in a new window.
    *
-   * @param object $entity
+   * @param \Drupal\bootstrap_toolbox\BootstrapToolboxStyleInterface $entity
+   *   The entity for which the link is generated.
+   *
+   * @return object
+   *   An object containing the generated link.
    */
   private function getLabelLink(EntityInterface $entity): object {
     $classes = $entity->getClasses();
@@ -134,16 +172,19 @@ final class BootstrapToolboxStyleListBuilder extends ConfigEntityListBuilder {
       ],
     ]);
 
-    $link = Link::fromTextAndUrl($entity->label(), $url)->toRenderable();
+    $label = (string) $entity->label();
+    $link = Link::fromTextAndUrl($label, $url)->toRenderable();
     $link['#attributes'] = [
       'onclick' => "window.open(this.href,'bootatrap_toolbox','toolbar=no,status=no,menubar=no,location=center,scrollbars=no,resizable=no,height=600,width=800'); return false;",
     ];
-    return $this->renderer->renderPlain($link);
+    return $this->renderer->renderInIsolation($link);
 
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @param \Drupal\bootstrap_toolbox\BootstrapToolboxStyleInterface $entity
    */
   public function getOperations(EntityInterface $entity) {
     $operations = parent::getOperations($entity);

@@ -43,7 +43,12 @@ final class ShowClassesController extends ControllerBase {
    * Builds the response.
    */
   public function __invoke(): array {
-    $classes = $this->requestStack->getCurrentRequest()->query->get('classes');
+    $request = $this->requestStack->getCurrentRequest();
+    $classes = '';
+    if ($request !== null){
+      $classes = $request->query->get('classes');
+    }
+      
     $text = '<div class="' . $classes . '">
         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed doeiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enimad minim veniam, quis nostrud exercitation ullamco laboris nisi utaliquip ex ea commodo consequat. Duis aute irure dolor inreprehenderit in voluptate velit esse cillum</p>
         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed doeiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enimad minim veniam, quis nostrud exercitation ullamco laboris nisi utaliquip ex ea commodo consequat. Duis aute irure dolor inreprehenderit in voluptate velit esse cillum dolore eu fugiat nullapariatur. Excepteur sint occaecat cupidatat non proident, sunt inculpa qui offi</p>

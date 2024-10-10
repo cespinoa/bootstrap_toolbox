@@ -7,10 +7,10 @@
 
       // Asegurarse de que el elemento esté presente y aplicar once.
       var elements = once('bootstrap-toolbox', context.querySelector(elementSelector));
-      
+      console.log(elements);
       if (elements.length) {
         var element = elements[0];
-      
+        console.log(element);
         // Remover todas las clases que contengan "container".
         var classesToRemove = [];
         element.classList.forEach(function (classItem) {

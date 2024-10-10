@@ -1,1 +1,41 @@
 selected_library: ''
+
+knownthemes:
+  bootstrap_barrio:
+    name: 'Bootstrap Barrio base theme'
+    sidebars_variables:
+      - sidebar_first
+      - sidebar_second
+    main_area_selector: '#main'
+    main_area_class: 'container-fluid'
+    central_panel_class: 'container'
+    edit_mode_fields_area: '.layout-region-node-main'
+    edit_mode_advanced_area: '.layout-region-node-secondary'
+    edit_mode_fields_area_remove_class: 'col-md-6'
+    edit_mode_advanced_area_remove_class: 'col-md-6'
+
+  bootstrap5:
+    name: 'Bootstrap 5'
+    sidebars_variables:
+      - sidebar_first
+      - sidebar_second
+    main_area_selector: '.dialog-off-canvas-main-canvas main div'
+    main_area_class: 'container-fluid'
+    central_panel_class: 'container'
+    edit_mode_fields_area: '.layout-region-node-main'
+    edit_mode_advanced_area: '.layout-region-node-secondary'
+    edit_mode_fields_area_remove_class: 'col-md-6'
+    edit_mode_advanced_area_remove_class: 'col-md-6'
+
+  bootstrap3:
+    name: 'Bootstrap 3 for Drupal'
+    sidebars_variables:
+      - sidebar_first
+      - sidebar_second
+    main_area_selector: '.main-container'
+    main_area_class: 'container-fluid'
+    central_panel_class: 'container'
+    edit_mode_fields_area: '.layout-region-node-main'
+    edit_mode_advanced_area: '.layout-region-node-secondary'
+    edit_mode_fields_area_remove_class: 'col-md-6'
+    edit_mode_advanced_area_remove_class: 'col-md-6'

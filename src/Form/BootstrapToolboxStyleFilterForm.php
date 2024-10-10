@@ -8,19 +8,22 @@ use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- *
+ * Provides the Bootstrap Toolbox Style Filter Form.
  */
 class BootstrapToolboxStyleFilterForm extends FormBase {
 
   /**
-   * @var Drupal\bootstrap_toolbox\UtilityServiceInterface
+   * The utility service.
    *
-   * The utility service
-   * */
+   * @var \Drupal\bootstrap_toolbox\UtilityServiceInterface
+   */
   protected $utilityService;
 
   /**
-   * {@inheritdoc}
+   * Constructs a BootstrapToolboxStyleFilterForm object.
+   *
+   * @param \Drupal\bootstrap_toolbox\UtilityServiceInterface $utilityService
+   *   The utility service.
    */
   public function __construct(UtilityServiceInterface $utilityService) {
     $this->utilityService = $utilityService;

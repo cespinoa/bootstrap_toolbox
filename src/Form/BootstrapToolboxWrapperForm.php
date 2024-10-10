@@ -19,28 +19,30 @@ final class BootstrapToolboxWrapperForm extends EntityForm {
   public function form(array $form, FormStateInterface $form_state): array {
 
     $form = parent::form($form, $form_state);
+    /** @var \Drupal\bootstrap_toolbox\BootstrapToolboxScopeInterface $entity **/
+    $entity = $this->entity;
 
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Title'),
       '#maxlength' => 255,
-      '#default_value' => $this->entity->label(),
+      '#default_value' => $entity->label(),
       '#required' => TRUE,
     ];
 
     $form['id'] = [
       '#type' => 'machine_name',
-      '#default_value' => $this->entity->id(),
+      '#default_value' => $entity->id(),
       '#machine_name' => [
         'exists' => [BootstrapToolboxWrapper::class, 'load'],
       ],
-      '#disabled' => !$this->entity->isNew(),
+      '#disabled' => !$entity->isNew(),
     ];
 
     $form['description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Wrapper class'),
-      '#default_value' => $this->entity->get('description'),
+      '#default_value' => $entity->get('description'),
       '#required' => TRUE,
     ];
 
@@ -57,6 +59,7 @@ final class BootstrapToolboxWrapperForm extends EntityForm {
       match($result) {
         \SAVED_NEW => $this->t('Created new wrapper %label.', $messageArgs),
         \SAVED_UPDATED => $this->t('Updated wrapper %label.', $messageArgs),
+        default => $this->t('Performed an action on wrapper %label.', $messageArgs),
       }
     );
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));

@@ -22,3 +22,8 @@ entity.bootstrap_toolbox_scope.collection:
   route_name: entity.bootstrap_toolbox_scope.collection
   title: 'Scopes'
   base_route: bootstrap_toolbox.settings
+
+bootstrap_toolbox.report:
+  route_name: bootstrap_toolbox.report
+  title: 'Report'
+  base_route: bootstrap_toolbox.settings

@@ -45,6 +45,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "id",
  *     "label",
  *     "description",
+ *     "uuid",
  *   },
  * )
  */
@@ -53,16 +54,16 @@ final class BootstrapToolboxWrapper extends ConfigEntityBase implements Bootstra
   /**
    * The example ID.
    */
-  protected string $id;
+  protected string $id = '';
 
   /**
    * The example label.
    */
-  protected string $label;
+  protected string $label = '';
 
   /**
    * The example description.
    */
-  protected string $description;
+  protected string $description = '';
 
 }

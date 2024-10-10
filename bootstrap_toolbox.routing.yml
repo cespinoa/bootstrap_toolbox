@@ -1,10 +1,20 @@
+bootstrap_toolbox.basethemes:
+  path: '/admin/config/bootstrap-toolbox/base-themes/{action}/{themeId}'
+  defaults:
+    _form: '\Drupal\bootstrap_toolbox\Form\BaseThemesForm'
+    _title: 'Base themes'
+    action: ''
+    themeId: ''
+  requirements:
+    _permission: 'administer site configuration'
+
 bootstrap_toolbox.create_files:
   path: '/create-bootstrap-toolbox'
   defaults:
     _controller: '\Drupal\bootstrap_toolbox\Controller\FileController::createFiles'
     _title: 'Create Bootstrap Toolbox Files'
   requirements:
-    _permission: 'access content'
+    _permission: 'administer site configuration'
     
 bootstrap_toolbox.show_classes:
   path: '/bootstrap-toolbox/show-classes'
@@ -12,7 +22,7 @@ bootstrap_toolbox.show_classes:
     _title: 'Show Classes'
     _controller: '\Drupal\bootstrap_toolbox\Controller\ShowClassesController'
   requirements:
-    _permission: 'access content'
+    _permission: 'administer site configuration'
   options:
     query:
       classes: ''
@@ -22,6 +32,15 @@ bootstrap_toolbox.show_classes:
       hide_sidebars: TRUE
       hide_breadcrumb: TRUE
       hide_title: FALSE
+      custom_theme: ''
+
+bootstrap_toolbox.report:
+  path: '/admin/config/bootstrap-toolbox/report'
+  defaults:
+    _title: 'Settings report'
+    _controller: '\Drupal\bootstrap_toolbox\Controller\ReportController'
+  requirements:
+    _permission: 'administer site configuration'
 
 style_wizar.form:
   path: '/admin/config/bootstrap-toolbox/style-wizar'
@@ -173,3 +192,11 @@ bootstrap_toolbox.extender:
       hide_breadcrumb: TRUE
       hide_title: FALSE
       custom_theme: olivero
+
+bootstrap_toolbox.edit_custom_css:
+  path: '/admin/config/bootstrap-toolbox/edit-custom-css'
+  defaults:
+    _title: 'Edit custom css'
+    _form: 'Drupal\bootstrap_toolbox\Form\EditCustomCssForm'
+  requirements:
+    _permission: 'admin classes'

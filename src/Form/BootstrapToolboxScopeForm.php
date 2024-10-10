@@ -7,6 +7,7 @@ namespace Drupal\bootstrap_toolbox\Form;
 use Drupal\bootstrap_toolbox\Entity\BootstrapToolboxScope;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\bootstrap_toolbox\BootstrapToolboxScopeInterface;
 
 /**
  * Bootstrap Toolbox Scope form.
@@ -18,38 +19,41 @@ final class BootstrapToolboxScopeForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state): array {
 
+    /** @var \Drupal\bootstrap_toolbox\BootstrapToolboxScopeInterface $entity **/
+    $entity = $this->entity;
+
     $form = parent::form($form, $form_state);
 
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Name'),
       '#maxlength' => 255,
-      '#default_value' => $this->entity->label(),
+      '#default_value' => $entity->label(),
       '#required' => TRUE,
     ];
 
     $form['id'] = [
       '#type' => 'machine_name',
-      '#default_value' => $this->entity->id(),
+      '#default_value' => $entity->id(),
       '#machine_name' => [
         'exists' => [BootstrapToolboxScope::class, 'load'],
       ],
-      '#disabled' => !$this->entity->isNew(),
+      '#disabled' => !$entity->isNew(),
     ];
 
     $form['description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Description'),
-      '#default_value' => $this->entity->get('description'),
+      '#default_value' => $entity->get('description'),
     ];
 
     $form['system'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('System scope'),
-      '#default_value' => $this->entity->get('system') ?? FALSE,
+      '#default_value' => $entity->get('system') ?? FALSE,
     ];
 
-    if ($this->entity->get('system')) {
+    if ($entity->get('system')) {
       // Remove the delete button if it's a system scope.
       unset($form['actions']['delete']);
     }
@@ -65,8 +69,9 @@ final class BootstrapToolboxScopeForm extends EntityForm {
     $messageArgs = ['%label' => $this->entity->label()];
     $this->messenger()->addStatus(
       match($result) {
-        \SAVED_NEW => $this->t('Created new example %label.', $messageArgs),
-        \SAVED_UPDATED => $this->t('Updated example %label.', $messageArgs),
+        \SAVED_NEW => $this->t('Created new scope %label.', $messageArgs),
+        \SAVED_UPDATED => $this->t('Updated scope %label.', $messageArgs),
+        default => $this->t('Performed an action on scope %label.', $messageArgs),
       }
     );
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));

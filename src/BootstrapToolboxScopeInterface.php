@@ -27,4 +27,15 @@ interface BootstrapToolboxScopeInterface extends ConfigEntityInterface {
    */
   public function isSystem(): bool;
 
+  /**
+     * Returns the value of a property.
+     *
+     * @param string $property_name
+     *   The name of the property that should be returned.
+     *
+     * @return mixed
+     *   The property if it exists, or NULL otherwise.
+     */
+    public function get($property_name);
+
 }

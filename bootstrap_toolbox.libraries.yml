@@ -29,4 +29,5 @@ custom:
   version: 1.x
   css:
     theme:
+      /sites/default/files/bootstrap_toolbox/custom.css: {}
       css/custom.css: {}

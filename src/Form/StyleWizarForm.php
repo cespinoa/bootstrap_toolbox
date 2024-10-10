@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\Core\Theme\ThemeInitializationInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\bootstrap_toolbox\UtilityServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 
@@ -31,19 +32,30 @@ class StyleWizarForm extends FormBase {
   protected $themeInitialization;
 
   /**
+   * The utility service.
+   *
+   * @var \Drupal\bootstrap_toolbox\UtilityServiceInterface
+   */
+  protected UtilityServiceInterface $utilityService;
+
+  /**
    * Constructs a new YourFormClass.
    *
    * @param \Drupal\Core\Theme\ThemeManagerInterface $theme_manager
    *   The theme manager service.
    * @param \Drupal\Core\Theme\ThemeInitializationInterface $theme_initialization
    *   The theme initialization service.
+   * @param \Drupal\bootstrap_toolbox\UtilityServiceInterface $utilityService
+   *  The utility service.
    */
   public function __construct(
     ThemeManagerInterface $theme_manager,
     ThemeInitializationInterface $theme_initialization,
+    UtilityServiceInterface $utilityService
   ) {
     $this->themeManager = $theme_manager;
     $this->themeInitialization = $theme_initialization;
+    $this->utilityService = $utilityService;
   }
 
   /**
@@ -52,7 +64,8 @@ class StyleWizarForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('theme.manager'),
-      $container->get('theme.initialization')
+      $container->get('theme.initialization'),
+      $container->get('bootstrap_toolbox.utility_service')
     );
   }
 
@@ -67,15 +80,9 @@ class StyleWizarForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Guarda el tema activo actual para poder restaurarlo después, si es necesario.
-    $currentActiveTheme = $this->themeManager->getActiveTheme();
-
-    // Cambia el tema al deseado, por ejemplo, el tema predeterminado del sitio.
-    $siteTheme = \Drupal::config('system.theme')->get('default');
-
-    if ($siteTheme && $siteTheme != $currentActiveTheme->getName()) {
-      $this->themeManager->setActiveTheme($this->themeInitialization->initTheme($siteTheme));
-    }
+    
+    $siteTheme = $this->utilityService->getDefaultTheme();
+    $this->themeManager->setActiveTheme($this->themeInitialization->initTheme($siteTheme));
 
     // Bootstrap class options.
     $textColors = [
@@ -211,6 +218,7 @@ class StyleWizarForm extends FormBase {
     ];
 
     $classesStr = $this->getRequest()->query->get('classes', '');
+    $classesStr = is_string($classesStr) ? $classesStr : '';
     $classes = explode(' ', $classesStr);
 
     $arrays = ['textColors', 'backgroundColors', 'textSizes', 'padding', 'margin',

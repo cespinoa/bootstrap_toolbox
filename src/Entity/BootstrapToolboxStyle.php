@@ -75,6 +75,8 @@ final class BootstrapToolboxStyle extends ConfigEntityBase implements BootstrapT
 
   /**
    * Style scope.
+   *
+   * @var string[]
    */
   protected array $scope;
 
@@ -109,9 +111,9 @@ final class BootstrapToolboxStyle extends ConfigEntityBase implements BootstrapT
   /**
    * Style classes getter as HTML list.
    *
-   * @return object
+   * @return object|string|null
    */
-  public function getClassesAsHtmlList(): object {
+  public function getClassesAsHtmlList(): object|string|null {
     $items = $this->getClassesAsArray();
     return \Drupal::service('bootstrap_toolbox.utility_service')->arrayToHtmlList($items);
   }
@@ -134,9 +136,9 @@ final class BootstrapToolboxStyle extends ConfigEntityBase implements BootstrapT
   /**
    * Style scope HTML list.
    *
-   * @return object
+   * @return object|string|null
    */
-  public function getScopeHtmlList(): object {
+  public function getScopeHtmlList(): object|string|null {
     $items = $this->getScope();
     $labels = [];
     foreach ($items as $item) {

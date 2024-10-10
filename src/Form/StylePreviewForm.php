@@ -5,54 +5,12 @@ namespace Drupal\bootstrap_toolbox\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 
-use Drupal\Core\Theme\ThemeInitializationInterface;
-use Drupal\Core\Theme\ThemeManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-
 /**
  * Implements a custom form for Bootstrap style preview.
  */
 class StylePreviewForm extends FormBase {
 
-  /**
-   * The theme manager service.
-   *
-   * @var \Drupal\Core\Theme\ThemeManagerInterface
-   */
-  protected $themeManager;
-
-  /**
-   * The theme initialization service.
-   *
-   * @var \Drupal\Core\Theme\ThemeInitializationInterface
-   */
-  protected $themeInitialization;
-
-  /**
-   * Constructs a new YourFormClass.
-   *
-   * @param \Drupal\Core\Theme\ThemeManagerInterface $theme_manager
-   *   The theme manager service.
-   * @param \Drupal\Core\Theme\ThemeInitializationInterface $theme_initialization
-   *   The theme initialization service.
-   */
-  public function __construct(
-    ThemeManagerInterface $theme_manager,
-    ThemeInitializationInterface $theme_initialization,
-  ) {
-    $this->themeManager = $theme_manager;
-    $this->themeInitialization = $theme_initialization;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('theme.manager'),
-      $container->get('theme.initialization')
-    );
-  }
+ 
 
   /**
    * {@inheritdoc}
@@ -65,16 +23,7 @@ class StylePreviewForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // Guarda el tema activo actual para poder restaurarlo después, si es necesario.
-    $currentActiveTheme = $this->themeManager->getActiveTheme();
-
-    // Cambia el tema al deseado, por ejemplo, el tema predeterminado del sitio.
-    $siteTheme = \Drupal::config('system.theme')->get('default');
-
-    if ($siteTheme && $siteTheme != $currentActiveTheme->getName()) {
-      $this->themeManager->setActiveTheme($this->themeInitialization->initTheme($siteTheme));
-    }
-    // Bootstrap class options.
+   
     $textColors = [
       '' => $this->t('Select text color'),
       'text-primary' => $this->t('Primary'),

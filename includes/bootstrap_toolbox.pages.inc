@@ -20,24 +20,30 @@ use Drupal\Core\Template\Attribute;
  *
  * ThirdPartySetting and custom fields preprocess altering page visualization.
  */
-function bootstrap_toolbox_preprocess_html(array &$variables){
+function bootstrap_toolbox_preprocess_html(array &$variables) {
+  
   $config = \Drupal::config('bootstrap_toolbox.settings');
   $utilityService = \Drupal::service('bootstrap_toolbox.utility_service');
   $params = $utilityService->getBootstrapToolboxParameters();
-  extract($params);
-
+  $behaviorSelectors = $utilityService->getBehaviorSelectors();
   $variables['attributes'] = new Attribute();
-  if($edgeToEdge && $hideSidebars){
-    $variables['attributes']->addClass('bt-mode-landpage');
-  }
-  elseif($edgeToEdge && !$hideSidebars){
-    $variables['attributes']->addClass('bt-edge-to-edge-with-sidebars');
-  }
-  elseif(!$edgeToEdge && $hideSidebars){
-    $variables['attributes']->addClass('bt-panel-without-sidebars');
-  }
+  $variables['attributes']->addClass('base-theme-' . $behaviorSelectors);
   
+  if ($params) {
+    $edgeToEdge = !empty($params['edgeToEdge']); // Casting to boolean.
+    $hideSidebars = !empty($params['hideSidebars']); // Casting to boolean.
+    if ($edgeToEdge && $hideSidebars) {
+      $variables['attributes']->addClass('bt-mode-landpage');
+    } 
+    elseif ($edgeToEdge) {
+      $variables['attributes']->addClass('bt-edge-to-edge-with-sidebars');
+    } 
+    elseif ($hideSidebars) {
+      $variables['attributes']->addClass('bt-panel-without-sidebars');
+    }
+  }
 }
+
 
 
 /**
@@ -47,54 +53,73 @@ function bootstrap_toolbox_preprocess_html(array &$variables){
  */
 function bootstrap_toolbox_preprocess_page(array &$variables) {
 
+  $publicPath = \Drupal::service('file_system')->realpath('public://');
+  $fileUrl = $publicPath . '/bootstrap_toolbox/custom.css';
+  if (file_exists($fileUrl)) {
+    $variables['#attached']['library'][] = 'bootstrap_toolbox/custom';
+  }
+
   $config = \Drupal::config('bootstrap_toolbox.settings');
   $utilityService = \Drupal::service('bootstrap_toolbox.utility_service');
   $params = $utilityService->getBootstrapToolboxParameters();
-  extract($params);
+  if(!$params){
+    return;
+  }
+  
+  $hideSidebars = $params['hideSidebars'];
+  $hideTitle = $params['hideTitle'];
+  $hideBreadcrumb = $params['hideBreadcrumb'];
+  $edgeToEdge = $params['edgeToEdge'];
+  $routeName = $params['routeName'];
+  $node = $params['node'];
+  $customTheme = $params['customTheme'];
   
 
-  $forceToPanel = FALSE;
+  
+
+  
   $isEditMode = FALSE;
+  $forceToPanel = FALSE;
   // If node edit mode.
-  if (($routeName == 'entity.node.edit_form' && $node instanceof NodeInterface) ||
-      $routeName == 'node.add') {
-    $editModeHideSidebars = $config->get('edit_mode_hide_sidebars');
-    $editModeEdgeToEdge = $config->get('edit_mode_edge_to_edge');
-    $hideSidebars = $editModeHideSidebars ?? FALSE;
-    if ($editModeEdgeToEdge == 'edge_to_edge') {
-      $edgeToEdge = TRUE;
-      $forceToPanel = FALSE;
+  if (isset($routeName)){
+    if (($routeName == 'entity.node.edit_form' && $node instanceof NodeInterface) ||
+        $routeName == 'node.add') {
+      $editModeHideSidebars = $config->get('edit_mode_hide_sidebars');
+      $editModeEdgeToEdge = $config->get('edit_mode_edge_to_edge');
+      $hideSidebars = $editModeHideSidebars ?? FALSE;
+      if ($editModeEdgeToEdge == 'edge_to_edge') {
+        $edgeToEdge = TRUE;
+        $forceToPanel = FALSE;
+      }
+      elseif ($editModeEdgeToEdge == 'central_panel') {
+        $edgeToEdge = FALSE;
+        $forceToPanel = TRUE;
+      }
+      $isEditMode = TRUE;
     }
-    elseif ($editModeEdgeToEdge == 'central_panel') {
-      $edgeToEdge = FALSE;
-      $forceToPanel = TRUE;
-    }
-    $isEditMode = TRUE;
   }
+
   
   // Get behavior selectors
-  $behaviorSelectors = $config->get('selected_theme');
-  $sidebarsVariables = [];
-  if ($behaviorSelectors == 'custom') {
-    $sidebarsVariables = $config->get('sidebars_variables');
-    if ($sidebarsVariables) {
-      $sidebarsVariables = explode(' ', $sidebarsVariables);
-    }
-    $mainAreaSelector = $config->get('main_area_selector');
-    $mainAreaClass = $config->get('main_area_class');
-    $centralPanelClass = $config->get('central_panel_class');
+  $behaviorSelectors = $utilityService->getBehaviorSelectors();
+  if(!$behaviorSelectors){
+    return;
   }
-  else {
-    $themeVariables = \Drupal::service('bootstrap_toolbox.utility_service')
-      ->getThemeSelectors($behaviorSelectors);
-    $sidebarsVariables = $themeVariables['sidebars_variables'];
-    $mainAreaSelector = $themeVariables['main_area_selector'];
-    $mainAreaClass = $themeVariables['main_area_class'];
-    $centralPanelClass = $themeVariables['central_panel_class'];
-  }
+  
+  $themeVariables = $utilityService->getThemeSelectors($behaviorSelectors);
+  
 
+  if(!$themeVariables){
+    return;
+  }
+  
+  $sidebarsVariables = $themeVariables['sidebars_variables'];
+  $mainAreaSelector = $themeVariables['main_area_selector'];
+  $mainAreaClass = $themeVariables['main_area_class'];
+  $centralPanelClass = $themeVariables['central_panel_class'];
+  
   // Apply config.
-  if ($hideSidebars) {
+  if ($hideSidebars && $sidebarsVariables) {
     foreach ($sidebarsVariables as $sidebarVariable) {
       $variables['page'][$sidebarVariable] = NULL;
     }
@@ -112,7 +137,7 @@ function bootstrap_toolbox_preprocess_page(array &$variables) {
     $variables['page']['breadcrumb'] = NULL;
   }
 
-  if ($edgeToEdge) {
+  if ($edgeToEdge && $mainAreaClass && $mainAreaSelector) {
     $variables['#attached']['library'][] = 'bootstrap_toolbox/apply_container_class';
     $variables['#attached']['drupalSettings']['apply_container_class'] = [
       'className' => $mainAreaClass,
@@ -149,12 +174,8 @@ function bootstrap_toolbox_preprocess_page(array &$variables) {
       $variables['#attached']['drupalSettings']['apply_edition_mode'] = $vars;
     }
 
-    $publicPath = \Drupal::service('file_system')->realpath('public://');
-    $fileUrl = $publicPath . '/bootstrap_toolbox/custom.css';
-    if (file_exists($fileUrl)) {
-      $variables['#attached']['library'][] = 'bootstrap_toolbox/custom';
-    }
   }
+  
 }
 
 /**

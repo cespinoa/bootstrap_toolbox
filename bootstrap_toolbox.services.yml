@@ -10,6 +10,15 @@ services:
       - '@file_url_generator'
       - '@theme_handler'
       - '@path.matcher'
+      - '@request_stack'
+      - '@logger.factory'
+      - '@messenger'
+      - '@module_handler'
+      - '@file_system'
+      - '@current_route_match'
+      - '@theme.manager'
+      - '@string_translation'
+      
 
   bootstrap_toolbox.render_block_component_subscriber:
     class: Drupal\bootstrap_toolbox\EventSubscriber\BlockComponentRenderArraySubscriber
